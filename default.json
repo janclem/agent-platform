@@ -114,6 +114,13 @@
       "automerge": false
     },
     {
+      "description": "Review agent-platform template updates (copier update) by hand - they rewrite shared project files",
+      "matchManagers": [
+        "copier"
+      ],
+      "automerge": false
+    },
+    {
       "description": "Disable release age for lockfile maintenance",
       "matchUpdateTypes": [
         "lockFileMaintenance"
