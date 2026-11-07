@@ -13,39 +13,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ci:
-    name: ci
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  platform:
+    name: platform
     permissions:
       contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: $/.github/actions/setup-mise
-        with:
-          tools: terraform jactionlint shellcheck
-
-      - name: Lint GitHub Actions workflows
-        run: mise exec -- jactionlint
-
-      - name: Check Terraform formatting
-        run: mise exec -- terraform fmt -check -recursive -diff infra
-
-      - name: Validate Terraform roots
-        run: mise exec -- .github/actions/terraform-check/terraform-check.sh
-
-      - name: Check agent skill layout
-        run: .github/actions/check-skills/check-skills.sh
-
-      - name: Validate Renovate config
-        run: >-
-          docker run --rm
-          --volume "${GITHUB_WORKSPACE}:/workspace"
-          --workdir /workspace
-          --entrypoint renovate-config-validator
-          renovate/renovate:44.180.0@sha256:ad97d11f73542932f3615dcfd8bc9637d20f80ebf6cc97d0d12a885a19bf3412
-          --strict renovate.json default.json
+    uses: $/.github/workflows/checks.yml
