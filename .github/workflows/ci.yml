@@ -27,7 +27,7 @@ jobs:
 
       - uses: $/.github/actions/setup-mise
         with:
-          tools: terraform jactionlint shellcheck claude
+          tools: terraform jactionlint shellcheck
 
       - name: Lint GitHub Actions workflows
         run: mise exec -- jactionlint
@@ -38,8 +38,8 @@ jobs:
       - name: Validate Terraform roots
         run: mise exec -- scripts/terraform-validate.sh
 
-      - name: Validate Claude Code marketplace and plugin
-        run: mise exec -- scripts/validate-plugin.sh
+      - name: Check agent skill layout
+        run: scripts/check-skills.sh
 
       - name: Validate Renovate config
         run: >-
