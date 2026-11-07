@@ -1,0 +1,83 @@
+<!-- Adapted from Robbie-Palmer/hq (docs/runbooks/agent-coordinator-hq-delivery.md), AGPL-3.0. -->
+
+# `{{ project_name }}` delivery contract
+
+This contract says what an agent may deliver in this repo on its own, which evidence
+proves a change is done, and when it must stop and ask. Until **Scope** names a
+production target, agents may merge changes that pass the gates but must not deploy
+anything; request attention instead.
+
+## Scope
+
+- Production target: TODO (service, environment, URL).
+- Deployed by: TODO (workflow file and trigger).
+- Out of scope: changes to another deployed service, data migrations, and anything
+  the gates below cannot validate. Request attention instead of stretching this
+  contract.
+
+## Delivery gates
+
+### Local checks
+
+Run from a clean worktree before publishing or updating the pull request:
+
+```bash
+mise run ci
+```
+
+Record every command and result in the pull request. Do not replace a failed check
+with an exclusion, a generated-file edit, or a weaker command.
+
+### Branch and review policy
+
+`main` requires a pull request and the `platform / checks` status check, blocks
+deletion and non-fast-forward updates, and allows only squash merges. An agent may
+merge without routine human approval once every triggered check has passed and every
+actionable review finding is resolved (the `complete-pr-review-loop` skill).
+
+Read the live rules before each merge; live policy wins if it is stricter:
+
+```bash
+gh api repos/janclem/{{ project_name }}/rulesets
+```
+
+Never use an administrator bypass, change the ruleset, dismiss a review, or mark a
+check successful. Merge only with `gh pr merge <number> --squash --delete-branch`,
+then read the PR again and record its `mergeCommit.oid` as `<merged-revision>`.
+
+## Deployment and production proof
+
+TODO once Scope names a target. State:
+
+- which run must deploy `<merged-revision>` (workflow, event, `headSha`, conclusion);
+- the production smoke test that runs after deploy, with unauthenticated read-only
+  requests against the fixed production origin;
+- any change-specific check, stated in the PR before merge.
+
+Success requires: the PR is squash-merged at `<merged-revision>`; the deploy run for
+exactly that revision succeeded; the smoke test and any change-specific check passed
+afterwards. A superseded or cancelled run is not evidence. Record the PR URL, merged
+revision, run URL, smoke results and UTC timestamps where the work is tracked (the
+Work Graph once it exists; the PR until then).
+
+## Failed rollout and rollback
+
+Prefer a bounded repair when the cause is clear, production is still usable, and the
+repair can pass the same gates promptly. Otherwise roll back: TODO (guarded rollback
+workflow, if the target has one). Make the source durable by reverting the merged
+squash commit in a new PR that goes through the same gates. Never force-push `main`.
+
+## Authority and attention
+
+An agent may edit code, push its branch, open and update a pull request, respond to
+review, squash-merge after the gates pass, let the deploy workflow run, inspect public
+production responses, and revert its own merged change.
+
+It may not bypass branch protection, alter required checks or environment
+protections, expose or rotate credentials, dismiss a security alert, deploy anything
+outside Scope, perform destructive data work, or call a rollout healthy because an
+upload finished.
+
+Missing access, a policy conflict, an unsafe fix, an ambiguous validation result, or
+one failed recovery attempt requires a blocking attention request. Name the single
+decision or permission needed and keep the evidence already gathered.

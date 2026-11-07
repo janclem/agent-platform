@@ -27,6 +27,10 @@ Copier template. More areas (machines/, services/, templates/) will be added.
 - Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML/HCL;
   scripts a composite action needs live next to its `action.yml`.
 
+## Delivery
+[docs/runbooks/agent-platform-delivery.md](docs/runbooks/agent-platform-delivery.md) defines the
+gates, the evidence that proves a change is done, and what needs the owner's say-so.
+
 ## Done means
 Checks pass, PR merged, and the change is verified where it runs (e.g. `terraform plan` shows
 no drift after apply). An open PR is not done.
