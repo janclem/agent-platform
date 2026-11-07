@@ -43,12 +43,18 @@ Agent skills live in `.agents/skills/`, which Codex reads, with pointer files in
 `.claude/skills/` for Claude Code. This follows the layout of Robbie's `hq`. Project repos
 get copies from this repo's Copier template and pick up changes with `copier update`.
 
+## Home server
+
+`homelab/` declares NixOS machines as a flake. The home PC's install, rebuild, and
+recovery steps are in [docs/runbooks/homeserver.md](docs/runbooks/homeserver.md).
+
 ## Credits
 
 The architecture follows Robbie Palmer's
 [semi-autonomous software development](https://robbiepalmer.me/initiatives/semi-autonomous-software-development)
 initiative and his [`hq`](https://github.com/Robbie-Palmer/hq) monorepo. Files adapted
-from `hq` keep their original copyright notices.
+from `hq` keep their original copyright notices; `homelab/` follows the layout of hq's
+`homelab/` flake.
 
 ## License
 

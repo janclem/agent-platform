@@ -8,9 +8,11 @@ which evidence proves a change is done, and when it must stop and ask.
 ## Scope
 
 Changes to this repo: Terraform in `infra/`, the reusable workflows and composite
-actions, the Renovate preset, agent skills, the Copier template, and docs. Production
+actions, the Renovate preset, agent skills, the Copier template, the NixOS hosts in `homelab/`,
+and docs. Production
 effects are the GitHub settings Terraform manages (HCP workspace
-`terraform-clemetson/foundation`) and the releases project repos consume.
+`terraform-clemetson/foundation`), the releases project repos consume, and the machines
+in [homeserver.md](homeserver.md).
 
 ## Delivery gates
 
@@ -49,6 +51,9 @@ PR, dismiss a review, or mark a check successful.
   the owner has authorized it for that change (see Authority). Evidence: the HCP run
   URL with `0 to destroy` (unless the destroy was approved), and a follow-up
   `terraform plan` showing no changes.
+- **Hosts**: after merge, the owner (or an agent they authorize for that change) runs
+  `nixos-rebuild switch` from `main`. Evidence: `nixos-version --configuration-revision`
+  prints the merge commit.
 - **Releases**: after merging a change to the reusable workflows, actions, or
   template, tag an exact `vX.Y.Z` on the merge commit. Evidence: `copier copy` from
   `gh:janclem/agent-platform` records that tag as `_commit`.
@@ -68,7 +73,8 @@ tag a new patch release instead.
 An agent may branch, open and update PRs, respond to review, squash-merge after the
 gates pass, run `terraform plan`, and tag releases.
 
-It may not run `terraform apply` without the owner's authorization for that change,
+It may not run `terraform apply`, the host installer, or `nixos-rebuild switch` without
+the owner's authorization for that change,
 apply any plan that destroys or replaces a resource without explicit approval, bypass
 branch protection, read or expose secrets, or delete published tags.
 
