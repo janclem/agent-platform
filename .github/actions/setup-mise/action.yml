@@ -1,0 +1,26 @@
+# Adapted from Robbie Palmer's hq (.github/actions/setup-mise), AGPL-3.0.
+name: Setup mise
+description: Install the pinned mise version and the requested repository tools
+
+inputs:
+  tools:
+    description: Space-separated tools from mise.toml to install (all tools when empty)
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Read pinned mise version
+      id: version
+      shell: bash
+      env:
+        MISE_VERSION_FILE: ${{ github.action_path }}/mise-version.txt
+      run: ${{ github.action_path }}/read-version.sh
+
+    - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+      with:
+        version: ${{ steps.version.outputs.value }}
+        install_args: ${{ inputs.tools }}
+        experimental: true
+        minimum_release_age: 24h
