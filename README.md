@@ -8,22 +8,9 @@ Coding agents should read [AGENTS.md](AGENTS.md).
 
 ## Shared skills
 
-Project repos get the shared agent skills from the `platform` Claude Code plugin:
-
-```text
-/plugin install platform --marketplace janclem/agent-platform
-```
-
-Or commit it to the project's `.claude/settings.json` so every session has it:
-
-```json
-{
-  "extraKnownMarketplaces": {
-    "agent-platform": { "source": { "source": "github", "repo": "janclem/agent-platform" } }
-  },
-  "enabledPlugins": { "platform@agent-platform": true }
-}
-```
+Agent skills live in `.agents/skills/`, which Codex reads, with pointer files in
+`.claude/skills/` for Claude Code. This follows the layout of Robbie's `hq`. Project repos
+get copies from this repo's Copier template and pick up changes with `copier update`.
 
 ## Credits
 
