@@ -25,7 +25,8 @@
       "customType": "regex",
       "description": "Track the Renovate image used to validate Renovate config in CI",
       "managerFilePatterns": [
-        "/^\\.github/workflows/[^/]+\\.ya?ml$/"
+        "/^\\.github/workflows/[^/]+\\.ya?ml$/",
+        "/^\\.github/actions/[^/]+/action\\.ya?ml$/"
       ],
       "matchStrings": [
         "renovate/renovate:(?<currentValue>[0-9][^@\\s]*)@(?<currentDigest>sha256:[a-f0-9]+)"

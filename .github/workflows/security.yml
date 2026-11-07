@@ -1,5 +1,3 @@
-# Scanner posture adapted from Robbie Palmer's hq (gitleaks.yml, zizmor.yml), AGPL-3.0:
-# findings are advisory and land in the Security tab; a scanner that fails to run fails the job.
 name: Security
 
 on:
@@ -18,57 +16,9 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  gitleaks:
-    name: gitleaks
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+  security:
+    name: security
     permissions:
       contents: read
       security-events: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-          fetch-depth: 0 # gitleaks scans every commit
-
-      - uses: $/.github/actions/setup-mise
-        with:
-          tools: gitleaks
-
-      - name: Scan git history for secrets
-        run: mise exec -- gitleaks git --redact --exit-code 0 --report-format sarif --report-path gitleaks.sarif
-
-      - name: Upload results to GitHub Security
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
-        with:
-          sarif_file: gitleaks.sarif
-          category: gitleaks
-
-  zizmor:
-    name: zizmor
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      security-events: write
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - uses: $/.github/actions/setup-mise
-        with:
-          tools: zizmor
-
-      - name: Audit GitHub Actions workflows
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: mise exec -- zizmor --no-exit-codes --format sarif . > zizmor.sarif
-
-      - name: Upload results to GitHub Security
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
-        with:
-          sarif_file: zizmor.sarif
-          category: zizmor
+    uses: $/.github/workflows/scans.yml

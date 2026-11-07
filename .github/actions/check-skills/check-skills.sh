@@ -2,6 +2,12 @@
 # Every skill in .agents/skills (read by Codex) needs a .claude/skills pointer
 # (read by Claude Code), and every relative link in a pointer must resolve.
 set -euo pipefail
+shopt -s nullglob
+
+if [[ ! -d .agents/skills && ! -d .claude/skills ]]; then
+  echo "No agent skills; skipping layout check."
+  exit 0
+fi
 
 status=0
 
