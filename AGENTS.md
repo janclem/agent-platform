@@ -4,7 +4,8 @@
 Personal agent automation platform. Infrastructure lives in `infra/` (Terraform, HCP workspace
 `terraform-clemetson/foundation`). Shared agent skills live in `.agents/skills/` (read by Codex),
 with thin pointers in `.claude/skills/` (read by Claude Code); project repos get copies from the
-Copier template. More areas (machines/, services/, templates/) will be added.
+Copier template. NixOS machines live in `homelab/` (a flake with one directory per host under
+`homelab/hosts/`). More areas (services/) will be added.
 
 ## Tooling
 - All tools are pinned in `mise.toml`. Run `mise install` first; use tools via mise.
@@ -24,6 +25,9 @@ Copier template. More areas (machines/, services/, templates/) will be added.
 - Releases are exact `vX.Y.Z` tags on `main` (no moving `v1` tag: Copier would record it as the
   template version). Tag a release after merging a change to the reusable workflows, actions,
   or template; keep changes backward compatible within a major version.
+- `homelab/scripts/check.sh` format-checks and evaluates the flake; it needs Nix, so CI runs it.
+  Never put a secret in a Nix file: it would land in the world-readable Nix store.
+- Never run the installer or `nixos-rebuild switch` on a machine yourself; build, report, and stop.
 - Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML/HCL;
   scripts a composite action needs live next to its `action.yml`.
 
