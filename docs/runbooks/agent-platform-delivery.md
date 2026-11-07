@@ -11,8 +11,8 @@ Changes to this repo: Terraform in `infra/`, the reusable workflows and composit
 actions, the Renovate preset, agent skills, the Copier template, the NixOS hosts in `homelab/`,
 and docs. Production
 effects are the GitHub settings Terraform manages (HCP workspace
-`terraform-clemetson/foundation`), the releases project repos consume, and the machines
-in [homeserver.md](homeserver.md).
+`terraform-clemetson/foundation`), the releases project repos consume, and the NixOS hosts
+in [nixos-hosts.md](nixos-hosts.md).
 
 ## Delivery gates
 

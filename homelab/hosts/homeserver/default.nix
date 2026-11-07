@@ -36,8 +36,7 @@ in
         enable = true;
         configurationLimit = 10;
       };
-      # Lets nixos-install put NixOS first in the firmware boot order. Windows
-      # keeps its own ESP on the NVMe and is picked from the F11 boot menu.
+      # Lets nixos-install put NixOS first in the firmware boot order.
       efi.canTouchEfiVariables = true;
     };
     tmp.cleanOnBoot = true;

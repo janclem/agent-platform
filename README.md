@@ -43,10 +43,10 @@ Agent skills live in `.agents/skills/`, which Codex reads, with pointer files in
 `.claude/skills/` for Claude Code. This follows the layout of Robbie's `hq`. Project repos
 get copies from this repo's Copier template and pick up changes with `copier update`.
 
-## Home server
+## Self-hosted servers
 
-`homelab/` declares NixOS machines as a flake. The home PC's install, rebuild, and
-recovery steps are in [docs/runbooks/homeserver.md](docs/runbooks/homeserver.md).
+`homelab/` declares NixOS hosts as a flake. Adding, installing, and rebuilding a host
+is covered in [docs/runbooks/nixos-hosts.md](docs/runbooks/nixos-hosts.md).
 
 ## Credits
 

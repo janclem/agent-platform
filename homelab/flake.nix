@@ -45,25 +45,29 @@
         ];
       };
 
-      packages.x86_64-linux.install-homeserver =
-        let
-          pkgs = pkgsFor "x86_64-linux";
-          host = self.nixosConfigurations.homeserver.config;
-        in
-        pkgs.writeShellApplication {
-          name = "install-homeserver";
-          runtimeInputs = with pkgs; [
-            coreutils
-            gnugrep
-            nixos-install-tools
-            util-linux
-          ];
-          runtimeEnv = {
-            DISKO_SCRIPT = host.system.build.diskoScript;
-            SYSTEM_TOPLEVEL = host.system.build.toplevel;
-            EXPECTED_DISK = host.disko.devices.disk.root.device;
-          };
-          text = builtins.readFile ./scripts/install-homeserver.sh;
-        };
+      # One guarded installer per host: `nix run .#install-<host>` on the NixOS installer.
+      packages.x86_64-linux = nixpkgs.lib.mapAttrs' (
+        name: host:
+        nixpkgs.lib.nameValuePair "install-${name}" (
+          (pkgsFor "x86_64-linux").writeShellApplication {
+            name = "install-${name}";
+            runtimeInputs = with (pkgsFor "x86_64-linux"); [
+              coreutils
+              gnugrep
+              nixos-install-tools
+              util-linux
+            ];
+            runtimeEnv = {
+              HOST_NAME = name;
+              DISKO_SCRIPT = host.config.system.build.diskoScript;
+              SYSTEM_TOPLEVEL = host.config.system.build.toplevel;
+              TARGET_DISKS = builtins.concatStringsSep " " (
+                map (disk: disk.device) (builtins.attrValues host.config.disko.devices.disk)
+              );
+            };
+            text = builtins.readFile ./scripts/install-host.sh;
+          }
+        )
+      ) self.nixosConfigurations;
     };
 }
