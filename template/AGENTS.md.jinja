@@ -1,0 +1,25 @@
+# Agent guide
+
+## Project
+{{ description if description else project_name }}
+
+## Tooling
+- All tools are pinned in `mise.toml`. Run `mise install` first; use tools via mise.
+- The project's checks are the `ci` mise task. CI runs it after the platform checks, so
+  `mise run ci` locally predicts the required `platform / checks` result.
+
+## Rules
+- Never commit secrets. Encrypted files via `sops` only; plaintext secrets are a hard stop.
+- `main` is protected: work on a branch, open a PR, squash-merge. Use the
+  `complete-pr-review-loop` skill to take a PR from draft to settled.
+- Record architecturally significant choices with the `adr-writing` skill.
+- Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML.
+
+## Platform-managed files
+This repo was generated from `janclem/agent-platform`. The CI workflows, `.agents/skills/`,
+`.claude/skills/`, and this guide come from its Copier template; change shared behavior there
+and pull it in with `copier update`. Project-specific additions to this guide are fine and
+survive updates.
+
+## Done means
+Checks pass, PR merged, and the change is verified where it runs. An open PR is not done.

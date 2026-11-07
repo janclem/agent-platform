@@ -1,0 +1,20 @@
+# Copier template for project repos built on agent-platform.
+#   New project:  copier copy --trust gh:janclem/agent-platform <dir>
+#   Update:       copier update   (run inside the project)
+# Template versions are this repo's vX.Y.Z tags.
+_min_copier_version: "9.19.1"
+_subdirectory: template
+_answers_file: .copier-answers.yml
+
+project_name:
+  type: str
+  help: Repository name (lowercase, hyphens)
+  validator: >-
+    {% if not (project_name | regex_search('^[a-z][a-z0-9-]*$')) %}
+    Use lowercase letters, digits and hyphens, starting with a letter.
+    {% endif %}
+
+description:
+  type: str
+  help: One-line description of the project
+  default: ""

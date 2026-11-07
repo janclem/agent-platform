@@ -17,6 +17,8 @@ Copier template. More areas (machines/, services/, templates/) will be added.
 - `main` is protected: work on a branch, open a PR with `gh pr create`, squash-merge.
 - Edit a skill in `.agents/skills/`. Add a `.claude/skills/` pointer for every new skill;
   `.github/actions/check-skills/check-skills.sh` enforces this.
+- `template/` (with `copier.yml`) is the Copier template for project repos. Its skills are
+  symlinks to this repo's, so edit skills here only. `mise run ci` renders and checks the template.
 - `.github/workflows/checks.yml` and `scans.yml` are reusable workflows that project repos call at
   `@v1`, together with the composite actions in `.github/actions/`. Keep changes backward
   compatible within v1; after merging one, move the `v1` tag to the new `main` commit.

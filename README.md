@@ -6,6 +6,17 @@ that project repos build on.
 
 Coding agents should read [AGENTS.md](AGENTS.md).
 
+## New project repos
+
+```sh
+copier copy --trust gh:janclem/agent-platform <dir>   # new project
+copier update --trust                                 # inside a project, pull template changes
+```
+
+The template provides `AGENTS.md`, the CI and security workflows, the Renovate preset, the
+agent skills, and a `mise.toml` that pins the platform tools. Template versions are this repo's
+`vX.Y.Z` tags, and Renovate proposes `copier update`s in projects.
+
 ## Reusable workflows
 
 Project repos run the platform checks and security scans by calling the reusable workflows:
@@ -15,8 +26,10 @@ jobs:
   platform: # required status check: `platform / checks`
     permissions:
       contents: read
-    uses: janclem/agent-platform/.github/workflows/checks.yml@v1
+    uses: janclem/agent-platform/.github/workflows/checks.yml@<v1 commit SHA> # v1.0.0
 ```
+
+Pin the commit, as jactionlint requires; Renovate keeps the pin current.
 
 `checks.yml` lints workflows and checks Terraform under `infra/`, the agent skill layout, and the
 Renovate config. It then runs the project's own `mise run ci` task if one exists. Each check

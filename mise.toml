@@ -10,3 +10,7 @@ sops = "3.13.3"
 terraform = "1.17.1"
 uv = "0.13.7"
 zizmor = "1.32.0"
+
+[tasks.ci]
+description = "Repo-specific checks run by the platform checks workflow"
+run = "scripts/test-template.sh"

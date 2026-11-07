@@ -1,0 +1,20 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  platform: # required status check: `platform / checks`
+    name: platform
+    permissions:
+      contents: read
+    uses: janclem/agent-platform/.github/workflows/checks.yml@abbfd4f561dbf61086eff6fdb7e0692eac1ae29f # v1.0.0
