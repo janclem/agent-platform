@@ -16,6 +16,7 @@ jobs:
   ci:
     name: ci
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     permissions:
       contents: read
     steps:
@@ -24,12 +25,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: ./.github/actions/setup-mise
+      - uses: $/.github/actions/setup-mise
         with:
-          tools: terraform actionlint
+          tools: terraform jactionlint shellcheck
 
       - name: Lint GitHub Actions workflows
-        run: mise exec -- actionlint
+        run: mise exec -- jactionlint
 
       - name: Check Terraform formatting
         run: mise exec -- terraform fmt -check -recursive -diff infra

@@ -1,4 +1,0 @@
-rules:
-  # `$/` self-repository refs are not yet understood by actionlint; keep `./` until it is.
-  self-repository:
-    disable: true
