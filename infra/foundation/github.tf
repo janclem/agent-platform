@@ -58,7 +58,16 @@ resource "github_repository_ruleset" "agent_platform_main" {
     required_linear_history = true
 
     pull_request {
-      required_approving_review_count = 0 # solo for now; checks become the gate later
+      required_approving_review_count = 0 # solo for now; the ci check is the gate
+    }
+
+    required_status_checks {
+      strict_required_status_checks_policy = false
+
+      required_check {
+        context        = "ci"
+        integration_id = 15368 # GitHub Actions
+      }
     }
   }
 }
