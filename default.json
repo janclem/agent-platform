@@ -1,0 +1,123 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": "Shared Renovate preset for janclem repos, adapted from Robbie-Palmer/hq",
+  "extends": [
+    "config:recommended",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "dependencyDashboard": true,
+  "minimumReleaseAge": "7 days",
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track the repository-wide mise bootstrap version",
+      "managerFilePatterns": [
+        "/^\\.github/actions/setup-mise/mise-version\\.txt$/"
+      ],
+      "matchStrings": [
+        "^(?<currentValue>[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?)$"
+      ],
+      "depNameTemplate": "jdx/mise",
+      "datasourceTemplate": "github-releases",
+      "versioningTemplate": "semver-coerced"
+    },
+    {
+      "customType": "regex",
+      "description": "Track the Renovate image used to validate Renovate config in CI",
+      "managerFilePatterns": [
+        "/^\\.github/workflows/[^/]+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "renovate/renovate:(?<currentValue>[0-9][^@\\s]*)@(?<currentDigest>sha256:[a-f0-9]+)"
+      ],
+      "depNameTemplate": "renovate/renovate",
+      "datasourceTemplate": "docker"
+    }
+  ],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "automerge": true
+  },
+  "packageRules": [
+    {
+      "description": "Major updates wait for approval on the dependency dashboard",
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Auto-merge GitHub Actions (all updates) - CI runs them on every PR",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "major",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Auto-merge mise-managed dev tooling that CI exercises on every PR",
+      "matchManagers": [
+        "mise"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch"
+      ],
+      "minimumReleaseAge": "3 days",
+      "automerge": true
+    },
+    {
+      "description": "Review age and sops by hand - they guard real secrets and no CI job proves them",
+      "matchManagers": [
+        "mise"
+      ],
+      "matchDepNames": [
+        "age",
+        "sops"
+      ],
+      "minimumReleaseAge": "7 days",
+      "automerge": false
+    },
+    {
+      "description": "Keep the mise bootstrap version current; CI installs it on every run",
+      "matchPackageNames": [
+        "jdx/mise"
+      ],
+      "groupName": "mise bootstrap",
+      "minimumReleaseAge": "3 days",
+      "dependencyDashboardApproval": false,
+      "automerge": true
+    },
+    {
+      "description": "Auto-merge the Renovate config validator image; it only runs in CI",
+      "matchPackageNames": [
+        "renovate/renovate"
+      ],
+      "matchUpdateTypes": [
+        "minor",
+        "patch",
+        "digest"
+      ],
+      "automerge": true
+    },
+    {
+      "description": "Review Terraform provider and core updates by hand - they change real infrastructure",
+      "matchManagers": [
+        "terraform"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Disable release age for lockfile maintenance",
+      "matchUpdateTypes": [
+        "lockFileMaintenance"
+      ],
+      "minimumReleaseAge": null
+    }
+  ]
+}
