@@ -1,0 +1,11 @@
+{
+  "name": "platform",
+  "version": "0.1.0",
+  "description": "Delivery and documentation skills shared by every project repo",
+  "author": {
+    "name": "janclem"
+  },
+  "homepage": "https://github.com/janclem/agent-platform",
+  "repository": "https://github.com/janclem/agent-platform",
+  "license": "AGPL-3.0-only"
+}

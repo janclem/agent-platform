@@ -19,5 +19,16 @@
       "Read(~/.terraform.d/**)",
       "Read(~/.config/sops/**)"
     ]
+  },
+  "extraKnownMarketplaces": {
+    "agent-platform": {
+      "source": {
+        "source": "github",
+        "repo": "janclem/agent-platform"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "platform@agent-platform": true
   }
 }
