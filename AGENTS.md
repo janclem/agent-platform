@@ -19,9 +19,11 @@ Copier template. More areas (machines/, services/, templates/) will be added.
   `.github/actions/check-skills/check-skills.sh` enforces this.
 - `template/` (with `copier.yml`) is the Copier template for project repos. Its skills are
   symlinks to this repo's, so edit skills here only. `mise run ci` renders and checks the template.
-- `.github/workflows/checks.yml` and `scans.yml` are reusable workflows that project repos call at
-  `@v1`, together with the composite actions in `.github/actions/`. Keep changes backward
-  compatible within v1; after merging one, move the `v1` tag to the new `main` commit.
+- `.github/workflows/checks.yml` and `scans.yml` are reusable workflows that project repos call
+  pinned to a release commit, together with the composite actions in `.github/actions/`.
+- Releases are exact `vX.Y.Z` tags on `main` (no moving `v1` tag: Copier would record it as the
+  template version). Tag a release after merging a change to the reusable workflows, actions,
+  or template; keep changes backward compatible within a major version.
 - Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML/HCL;
   scripts a composite action needs live next to its `action.yml`.
 
