@@ -1,8 +1,8 @@
 {
   disko.devices.disk.root = {
     type = "disk";
-    # Verified from the installer on 2026-11-07. Never replace this with /dev/sdX:
-    # the PC also holds the Windows NVMe and two game drives.
+    # Always a /dev/disk/by-id path: kernel names like /dev/sda can change between
+    # boots, and the installer refuses anything else.
     device = "/dev/disk/by-id/ata-Samsung_SSD_850_EVO_250GB_S2R6NX0J548174K";
     content = {
       type = "gpt";
