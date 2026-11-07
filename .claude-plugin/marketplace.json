@@ -1,0 +1,16 @@
+{
+  "name": "agent-platform",
+  "owner": {
+    "name": "janclem"
+  },
+  "metadata": {
+    "description": "Shared agent skills for janclem projects"
+  },
+  "plugins": [
+    {
+      "name": "platform",
+      "source": "./plugin",
+      "description": "Delivery and documentation skills shared by every project repo"
+    }
+  ]
+}

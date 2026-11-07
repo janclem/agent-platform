@@ -2,7 +2,9 @@
 
 ## Repo
 Personal agent automation platform. Infrastructure lives in `infra/` (Terraform, HCP workspace
-`terraform-clemetson/foundation`). More areas (machines/, services/, templates/) will be added.
+`terraform-clemetson/foundation`). Shared agent skills live in `plugin/skills/` and ship as the
+Claude Code plugin `platform@agent-platform`. More areas (machines/, services/, templates/) will
+be added.
 
 ## Tooling
 - All tools are pinned in `mise.toml`. Run `mise install` first; use tools via mise.
@@ -13,6 +15,8 @@ Personal agent automation platform. Infrastructure lives in `infra/` (Terraform,
 - Never run `terraform apply` yourself. Run `terraform plan`, report the summary, and stop.
 - Any plan that destroys or replaces a resource must be called out explicitly.
 - `main` is protected: work on a branch, open a PR with `gh pr create`, squash-merge.
+- Changing anything under `plugin/` requires bumping `version` in `plugin/.claude-plugin/plugin.json`;
+  installed copies only update when the version changes.
 - Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML/HCL.
 
 ## Done means
