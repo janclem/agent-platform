@@ -16,6 +16,7 @@ resource "github_repository" "agent_platform" {
   allow_merge_commit     = false
   allow_rebase_merge     = false
   delete_branch_on_merge = true
+  allow_auto_merge       = true # lets Renovate use GitHub auto-merge once required checks pass
 
   security_and_analysis {
     secret_scanning { status = "enabled" }
