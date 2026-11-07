@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: ./.github/actions/setup-mise
+        with:
+          tools: terraform actionlint
+
+      - name: Lint GitHub Actions workflows
+        run: mise exec -- actionlint
+
+      - name: Check Terraform formatting
+        run: mise exec -- terraform fmt -check -recursive -diff infra
+
+      - name: Validate Terraform roots
+        run: mise exec -- scripts/terraform-validate.sh
