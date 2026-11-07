@@ -1,5 +1,5 @@
 # Reusable platform checks. Project repos call this as
-# janclem/agent-platform/.github/workflows/checks.yml@v1 from a job named `platform`,
+# janclem/agent-platform/.github/workflows/checks.yml@<release SHA> # vX.Y.Z from a job named `platform`,
 # which makes the required status check `platform / checks`.
 name: Platform checks
 
