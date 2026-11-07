@@ -1,0 +1,46 @@
+# Reusable platform checks. Project repos call this as
+# janclem/agent-platform/.github/workflows/checks.yml@v1 from a job named `platform`,
+# which makes the required status check `platform / checks`.
+name: Platform checks
+
+on:
+  workflow_call:
+    inputs:
+      timeout-minutes:
+        description: Job timeout, raise it for slow project ci tasks
+        type: number
+        required: false
+        default: 15
+
+permissions: {}
+
+jobs:
+  checks:
+    name: checks
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ inputs.timeout-minutes }}
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools pinned in mise.toml
+        uses: $/.github/actions/setup-mise
+
+      - name: Lint GitHub Actions workflows
+        run: mise exec -- jactionlint
+
+      - name: Check Terraform
+        uses: $/.github/actions/terraform-check
+
+      - name: Check agent skills
+        uses: $/.github/actions/check-skills
+
+      - name: Validate Renovate config
+        uses: $/.github/actions/renovate-validate
+
+      - name: Run the project's ci task
+        run: if mise tasks info ci >/dev/null 2>&1; then mise run ci; else echo "No mise ci task; skipping."; fi

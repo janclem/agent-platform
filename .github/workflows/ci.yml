@@ -36,10 +36,10 @@ jobs:
         run: mise exec -- terraform fmt -check -recursive -diff infra
 
       - name: Validate Terraform roots
-        run: mise exec -- scripts/terraform-validate.sh
+        run: mise exec -- .github/actions/terraform-check/terraform-check.sh
 
       - name: Check agent skill layout
-        run: scripts/check-skills.sh
+        run: .github/actions/check-skills/check-skills.sh
 
       - name: Validate Renovate config
         run: >-

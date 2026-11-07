@@ -66,8 +66,8 @@ resource "github_repository_ruleset" "agent_platform_main" {
       strict_required_status_checks_policy = false
 
       required_check {
-        context        = "ci"
-        integration_id = 15368 # GitHub Actions
+        context        = "platform / checks" # job `platform` calling checks.yml
+        integration_id = 15368               # GitHub Actions
       }
     }
   }

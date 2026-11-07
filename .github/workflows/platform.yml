@@ -1,0 +1,20 @@
+name: Platform
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions: {}
+
+concurrency:
+  group: platform-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  platform:
+    name: platform
+    permissions:
+      contents: read
+    uses: $/.github/workflows/checks.yml

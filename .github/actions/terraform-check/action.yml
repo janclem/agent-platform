@@ -1,0 +1,9 @@
+name: Terraform check
+description: Check formatting and validate every Terraform root under infra/ (skips when absent)
+
+runs:
+  using: composite
+  steps:
+    - name: Check and validate Terraform
+      shell: bash
+      run: mise exec -- "${{ github.action_path }}/terraform-check.sh"

@@ -1,0 +1,9 @@
+name: Check agent skills
+description: Every .agents/skills skill has a .claude/skills pointer whose links resolve (skips when absent)
+
+runs:
+  using: composite
+  steps:
+    - name: Check agent skill layout
+      shell: bash
+      run: ${{ github.action_path }}/check-skills.sh
