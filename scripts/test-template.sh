@@ -18,7 +18,8 @@ status=0
 fail() { echo "::error::$1"; status=1; }
 
 for f in AGENTS.md CLAUDE.md README.md mise.toml renovate.json t3.json .copier-answers.yml \
-  .github/workflows/ci.yml .github/workflows/security.yml .claude/settings.json; do
+  .github/workflows/ci.yml .github/workflows/security.yml .claude/settings.json \
+  docs/runbooks/delivery-contract.md; do
   [[ -f "$f" ]] || fail "rendered project is missing $f"
 done
 
@@ -30,6 +31,8 @@ done
 diff -r "$root/.agents/skills" .agents/skills >/dev/null || fail ".agents/skills differs from the platform"
 
 grep -q '^# template-smoke-test$' README.md || fail "README.md did not render project_name"
+grep -q 'repos/janclem/template-smoke-test/rulesets' docs/runbooks/delivery-contract.md \
+  || fail "delivery-contract.md did not render project_name"
 grep -qE 'checks.yml@[0-9a-f]{40} # v1' .github/workflows/ci.yml || fail "ci.yml must call checks.yml pinned to a v1 commit"
 
 "$root/.github/actions/check-skills/check-skills.sh" || status=1

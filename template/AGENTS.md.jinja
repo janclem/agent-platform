@@ -15,6 +15,11 @@
 - Record architecturally significant choices with the `adr-writing` skill.
 - Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML.
 
+## Delivery
+[docs/runbooks/delivery-contract.md](docs/runbooks/delivery-contract.md) defines the gates, the
+evidence that proves a change is done, and what needs the owner's say-so. Until it names a
+production target, merge changes that pass the gates but deploy nothing.
+
 ## Platform-managed files
 This repo was generated from `janclem/agent-platform`. The CI workflows, `.agents/skills/`,
 `.claude/skills/`, and this guide come from its Copier template; change shared behavior there
