@@ -38,7 +38,8 @@ an installer package, `install-<host>`.
    and that nothing on it is mounted, and asks you to type `WIPE <serial>`. It then
    asks for an optional Wi-Fi network and password and runs disko and `nixos-install`.
    The Wi-Fi password goes only to `/etc/NetworkManager/system-connections` on the new
-   system, never into Git or the Nix store.
+   system, never into Git or the Nix store. For hosts with the `secure-boot` module it
+   also creates the machine's Secure Boot keys in `/var/lib/sbctl`.
 5. Remove the USB stick and reboot. NixOS is first in the firmware boot order.
 
 ## After install
@@ -47,6 +48,27 @@ an installer package, `install-<host>`.
   root takes keys only.
 - Join the tailnet: `sudo tailscale up`, then open the printed URL.
 - `nixos-version --configuration-revision` prints the commit the system was built from.
+
+## Secure Boot
+
+Hosts that import `nixosModules.secure-boot` boot through Lanzaboote, which signs the
+kernel with the machine's own keys in `/var/lib/sbctl`. The keys are created on the
+machine and never leave it. To add the module to a host that is already installed, run
+`sudo sbctl create-keys` on it before the first rebuild.
+
+To turn Secure Boot on:
+
+1. Check that the boot files are signed: `sudo sbctl verify`.
+2. In the firmware settings, put Secure Boot into Setup Mode. Depending on the vendor
+   that is "Reset to Setup Mode" or deleting the Platform Key. Keep the factory keys
+   restorable, and never erase the forbidden-signature database (dbx).
+3. Back on the host, enroll the keys: `sudo sbctl enroll-keys --microsoft`. Microsoft's
+   keys keep other operating systems and Microsoft-signed firmware add-ons booting.
+4. In the firmware settings, enable Secure Boot. After booting, `bootctl status` shows
+   `Secure Boot: enabled (user)`.
+
+If the keys in `/var/lib/sbctl` are lost, for example after a reinstall, create new ones
+and repeat these steps.
 
 ## Rebuild and roll back
 

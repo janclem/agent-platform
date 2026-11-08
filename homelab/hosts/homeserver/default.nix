@@ -31,14 +31,9 @@ in
   hardware.enableRedistributableFirmware = true;
 
   boot = {
-    loader = {
-      systemd-boot = {
-        enable = true;
-        configurationLimit = 10;
-      };
-      # Lets nixos-install put NixOS first in the firmware boot order.
-      efi.canTouchEfiVariables = true;
-    };
+    # The bootloader is Lanzaboote (modules/secure-boot.nix). This lets it put NixOS
+    # first in the firmware boot order.
+    loader.efi.canTouchEfiVariables = true;
     tmp.cleanOnBoot = true;
   };
 
