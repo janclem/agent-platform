@@ -7,6 +7,7 @@ let
 in
 {
   imports = [
+    ../../modules/reboot-to.nix
     ./disk-config.nix
     ./hardware-configuration.nix
   ];
