@@ -100,5 +100,12 @@ On the host, from a merged commit on `main`:
 sudo nixos-rebuild switch --flake 'github:janclem/agent-platform?dir=homelab#<host>'
 ```
 
-Roll back with `sudo nixos-rebuild switch --rollback`, or pick an older generation in
-the boot menu if SSH is unavailable.
+To roll back to the previous generation, pass the same flake reference; hosts have no
+channels, so `--rollback` alone fails looking for `nixos-config`:
+
+```bash
+sudo nixos-rebuild switch --rollback --flake 'github:janclem/agent-platform?dir=homelab#<host>'
+```
+
+If SSH is unavailable, pick an older generation in the boot menu instead.
+`nixos-version --configuration-revision` shows which commit is running.
