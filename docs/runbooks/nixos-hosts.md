@@ -49,6 +49,18 @@ an installer package, `install-<host>`.
 - Join the tailnet: `sudo tailscale up`, then open the printed URL.
 - `nixos-version --configuration-revision` prints the commit the system was built from.
 
+## Other boot entries
+
+Hosts that import `modules/reboot-to.nix` can restart once into another firmware boot
+entry, such as a second operating system, without a screen:
+`ssh <host> reboot-to <part of the entry name>`. The restart after that uses the normal
+boot order again. To open the firmware settings instead, run
+`sudo systemctl reboot --firmware-setup`.
+
+Some graphics cards show the firmware screens on only one output, or none over
+DisplayPort, until an OS driver loads. Keep a second cable (such as HDMI) for firmware
+visits, and select that input before powering on.
+
 ## Secure Boot
 
 Hosts that import `nixosModules.secure-boot` boot through Lanzaboote, which signs the
