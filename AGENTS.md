@@ -13,6 +13,8 @@ Copier template. NixOS machines live in `homelab/` (a flake with one directory p
 
 ## Rules
 - Never commit secrets. Encrypted files via `sops` only; plaintext secrets are a hard stop.
+- Repositories are declared in `infra/foundation/github.tf` and share the policy in
+  `infra/foundation/modules/project-repo`; see `docs/runbooks/new-project.md`.
 - Never run `terraform apply` yourself. Run `terraform plan`, report the summary, and stop.
 - Any plan that destroys or replaces a resource must be called out explicitly.
 - `main` is protected: work on a branch, open a PR with `gh pr create`, squash-merge.
