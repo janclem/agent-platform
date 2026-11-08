@@ -73,11 +73,21 @@ To turn Secure Boot on:
 1. Check that the boot files are signed: `sudo sbctl verify`.
 2. In the firmware settings, put Secure Boot into Setup Mode. Depending on the vendor
    that is "Reset to Setup Mode" or deleting the Platform Key. Keep the factory keys
-   restorable, and never erase the forbidden-signature database (dbx).
-3. Back on the host, enroll the keys: `sudo sbctl enroll-keys --microsoft`. Microsoft's
-   keys keep other operating systems and Microsoft-signed firmware add-ons booting.
+   restorable, and never erase the forbidden-signature database (dbx). If the firmware
+   has an option that provisions its factory keys automatically, disable it and save
+   first; otherwise it can put the keys back on the restart that deleting the Platform
+   Key forces.
+3. Back on the host, check that `sudo sbctl status` shows `Setup Mode: Enabled`, then
+   enroll the keys: `sudo sbctl enroll-keys --microsoft --firmware-builtin`. Microsoft's
+   keys keep other operating systems and Microsoft-signed firmware add-ons booting, and
+   `--firmware-builtin` keeps the vendor's own keys. If enrollment fails with
+   "operation not permitted", the kernel has marked the key variables immutable; run
+   `sudo chattr -i /sys/firmware/efi/efivars/{PK,KEK,db}-*` and try again.
 4. In the firmware settings, enable Secure Boot. After booting, `bootctl status` shows
    `Secure Boot: enabled (user)`.
+5. Run `sudo sbctl status`. If it lists firmware quirks, read the linked page for each.
+   Some firmware still runs unsigned images until its Secure Boot policy is set to deny
+   them, which makes Secure Boot report as on without enforcing anything.
 
 If the keys in `/var/lib/sbctl` are lost, for example after a reinstall, create new ones
 and repeat these steps.
