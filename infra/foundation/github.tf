@@ -6,6 +6,9 @@ locals {
       description = "Personal agent automation platform"
       auto_init   = false # existed before Terraform managed it
     }
+    platform-smoke-test = {
+      description = "Throwaway project that exercises the agent-platform template and policy"
+    }
   }
 }
 
