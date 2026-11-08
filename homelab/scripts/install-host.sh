@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# Runs as root on the NixOS installer. HOST_NAME, DISKO_SCRIPT, SYSTEM_TOPLEVEL and
-# TARGET_DISKS come from the flake, so the disk layout and system match the commit
+# Runs as root on the NixOS installer. HOST_NAME, DISKO_SCRIPT, SYSTEM_TOPLEVEL,
+# TARGET_DISKS and SECURE_BOOT come from the flake, so the disk layout and system match the commit
 # this was run from.
 
 if [[ $(id -u) != 0 ]]; then
@@ -89,6 +89,14 @@ method=auto
 PROFILE
   unset psk
   chmod 600 "${connections}/wifi.nmconnection"
+fi
+
+if [[ -n ${SECURE_BOOT} ]]; then
+  # Lanzaboote signs the boot files during nixos-install, so this machine's own
+  # Secure Boot keys must exist first. They never leave the machine.
+  sbctl --disable-landlock create-keys \
+    --database-path /mnt/var/lib/sbctl/GUID \
+    --export /mnt/var/lib/sbctl/keys
 fi
 
 nixos-install --system "${SYSTEM_TOPLEVEL}" --no-root-passwd --no-channel-copy
