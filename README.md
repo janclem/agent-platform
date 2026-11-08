@@ -48,6 +48,11 @@ get copies from this repo's Copier template and pick up changes with `copier upd
 `homelab/` declares NixOS hosts as a flake. Adding, installing, and rebuilding a host
 is covered in [docs/runbooks/nixos-hosts.md](docs/runbooks/nixos-hosts.md).
 
+## Decisions
+
+Why the platform is built this way is recorded in the
+[architecture decision records](docs/adr/index.md).
+
 ## Credits
 
 The architecture follows Robbie Palmer's
