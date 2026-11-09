@@ -1,0 +1,82 @@
+export const isNonBlankString = (value: unknown): value is string =>
+  typeof value === "string" && value.trim().length > 0;
+
+export const LOWERCASE_KEBAB_CASE_PATTERN =
+  /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+export const compareStrings = (left: string, right: string): number => {
+  if (left < right) return -1;
+  if (left > right) return 1;
+  return 0;
+};
+
+export const normalizeWhitespace = (value: string): string =>
+  value.trim().replaceAll(/\s+/g, " ");
+
+export function escapeXml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&apos;");
+}
+
+export function normalizeSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replaceAll("++", "plusplus")
+    .replaceAll("#", "sharp")
+    .replaceAll(".", "dot")
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
+    .replace(/-{2,}/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export function base64UrlEncode(value: string | Uint8Array): string {
+  const bytes =
+    typeof value === "string" ? new TextEncoder().encode(value) : value;
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCodePoint(byte);
+  return btoa(binary)
+    .replaceAll("+", "-")
+    .replaceAll("/", "_")
+    .replaceAll("=", "");
+}
+
+export function truncateWithEllipsis(
+  value: string,
+  maxLength: number,
+  ellipsis = "...",
+): string {
+  if (!Number.isSafeInteger(maxLength) || maxLength < ellipsis.length) {
+    throw new RangeError("maxLength must fit the ellipsis");
+  }
+  return value.length <= maxLength
+    ? value
+    : `${value.slice(0, maxLength - ellipsis.length)}${ellipsis}`;
+}
+
+export function primitiveString(value: unknown, fallback = ""): string {
+  if (typeof value === "string") return value;
+  if (
+    typeof value === "number" ||
+    typeof value === "boolean" ||
+    typeof value === "bigint"
+  ) {
+    return String(value);
+  }
+  return fallback;
+}
+
+export function uniqueCsv(
+  value: string | undefined,
+  fallback: string[],
+): string[] {
+  const values = value
+    ?.split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return values?.length ? [...new Set(values)] : fallback;
+}

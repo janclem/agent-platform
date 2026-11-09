@@ -1,0 +1,81 @@
+import { describe, expect, it } from "vitest";
+import {
+  base64UrlEncode,
+  compareStrings,
+  escapeXml,
+  isNonBlankString,
+  LOWERCASE_KEBAB_CASE_PATTERN,
+  normalizeSlug,
+  normalizeWhitespace,
+  primitiveString,
+  truncateWithEllipsis,
+  uniqueCsv,
+} from "../src/strings";
+
+describe("string helpers", () => {
+  it("encodes text and bytes as unpadded base64url", () => {
+    expect(base64UrlEncode("hello?")).toBe("aGVsbG8_");
+    expect(base64UrlEncode("✓")).toBe("4pyT");
+    expect(base64UrlEncode(Uint8Array.from([255, 254, 253]))).toBe("__79");
+  });
+
+  it.each([
+    ["text", true],
+    [" text ", true],
+    ["", false],
+    [" \n\t", false],
+    [undefined, false],
+    [null, false],
+    [1, false],
+  ])("identifies non-blank strings", (value, expected) => {
+    expect(isNonBlankString(value)).toBe(expected);
+  });
+
+  it("compares strings by code point for deterministic ordering", () => {
+    expect(compareStrings("a", "b")).toBe(-1);
+    expect(compareStrings("b", "a")).toBe(1);
+    expect(compareStrings("a", "a")).toBe(0);
+    expect(compareStrings("Z", "a")).toBe(-1);
+  });
+
+  it("normalizes display names to lowercase kebab-case slugs", () => {
+    expect(normalizeSlug("  C++ / OpenAPI.Schema  ")).toBe(
+      "cplusplus-openapidotschema",
+    );
+    expect(normalizeSlug("")).toBe("");
+    expect(LOWERCASE_KEBAB_CASE_PATTERN.test("openapi-schema")).toBe(true);
+    expect(LOWERCASE_KEBAB_CASE_PATTERN.test("OpenAPI_Schema")).toBe(false);
+  });
+
+  it("normalizes whitespace and truncates to an exact bound", () => {
+    expect(normalizeWhitespace("  Basic\n\t rate  ")).toBe("Basic rate");
+    expect(truncateWithEllipsis("123456", 5)).toBe("12...");
+    expect(truncateWithEllipsis("12345", 5)).toBe("12345");
+    expect(() => truncateWithEllipsis("value", 2)).toThrow(RangeError);
+  });
+
+  it("escapes XML text and attribute characters", () => {
+    expect(escapeXml(`<tag title="A & B">It's ready</tag>`)).toBe(
+      "&lt;tag title=&quot;A &amp; B&quot;&gt;It&apos;s ready&lt;/tag&gt;",
+    );
+  });
+});
+
+describe("uniqueCsv", () => {
+  it("trims, removes blanks, and de-duplicates values", () => {
+    expect(uniqueCsv(" one, two,one, ", [])).toEqual(["one", "two"]);
+  });
+
+  it("uses the fallback when no values are configured", () => {
+    expect(uniqueCsv(undefined, ["default"])).toEqual(["default"]);
+    expect(uniqueCsv(" , ", ["default"])).toEqual(["default"]);
+  });
+});
+
+describe("primitiveString", () => {
+  it("converts primitive values without stringifying objects", () => {
+    expect(primitiveString(42)).toBe("42");
+    expect(primitiveString(false)).toBe("false");
+    expect(primitiveString({}, "fallback")).toBe("fallback");
+  });
+});

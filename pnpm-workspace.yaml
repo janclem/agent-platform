@@ -1,0 +1,7 @@
+packages:
+  - "packages/*"
+
+# Dependency lifecycle scripts stay off unless a package needs one; list each
+# exception here so installs are reproducible and side-effect free.
+allowBuilds:
+  esbuild: false
