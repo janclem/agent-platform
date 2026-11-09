@@ -68,6 +68,14 @@ kernel with the machine's own keys in `/var/lib/sbctl`. The keys are created on 
 machine and never leave it. To add the module to a host that is already installed, run
 `sudo sbctl create-keys` on it before the first rebuild.
 
+Lanzaboote puts a small signed file for each generation in `/boot/EFI/Linux/`. Each one
+loads its kernel and initrd from `/boot/EFI/nixos/`, checked by hash rather than by
+signature. `sbctl verify` therefore lists the kernel there as not signed, which is
+expected. Never delete files from `/boot/EFI/nixos/`: every generation would fail with
+"Failed to read kernel". If that happens, boot the installer with Secure Boot off, mount
+the host's root at `/mnt` and its ESP at `/mnt/boot`, and run
+`nixos-enter --root /mnt -c 'NIXOS_INSTALL_BOOTLOADER=1 /nix/var/nix/profiles/system/bin/switch-to-configuration boot'`.
+
 To turn Secure Boot on:
 
 1. Check that the boot files are signed: `sudo sbctl verify`.
