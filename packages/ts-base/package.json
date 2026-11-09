@@ -1,0 +1,19 @@
+{
+  "name": "ts-base",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dependency-free TypeScript helpers for strings and JSON",
+  "type": "module",
+  "exports": {
+    "./json": "./src/json.ts",
+    "./strings": "./src/strings.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0",
+    "vitest": "^5.0.0"
+  }
+}

@@ -13,4 +13,14 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
+depends = ["ts:check"]
 run = "scripts/test-template.sh"
+
+[tasks."ts:install"]
+description = "Install the TypeScript workspace from the lockfile"
+run = "pnpm install --frozen-lockfile"
+
+[tasks."ts:check"]
+description = "Lint, typecheck and test every TypeScript package"
+depends = ["ts:install"]
+run = ["pnpm lint", "pnpm typecheck", "pnpm test"]

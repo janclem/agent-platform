@@ -1,0 +1,21 @@
+{
+  "name": "work-graph-domain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Domain rules for the Work Graph",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "ts-base": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.0",
+    "vitest": "^5.0.0"
+  }
+}

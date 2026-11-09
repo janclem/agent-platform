@@ -5,3 +5,7 @@
 # Nix build outputs
 result
 result-*
+
+# Node
+node_modules/
+coverage/
