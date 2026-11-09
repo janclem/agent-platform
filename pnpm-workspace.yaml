@@ -5,3 +5,9 @@ packages:
 # exception here so installs are reproducible and side-effect free.
 allowBuilds:
   esbuild: false
+
+# drizzle-kit (dev-only) still pulls @esbuild-kit/core-utils, which pins an
+# esbuild affected by GHSA-67mh-4wv8-2f99. Its transform calls work with the
+# patched line, so move only that subtree forward (as hq does).
+overrides:
+  "@esbuild-kit/core-utils>esbuild": "^0.28.0"

@@ -13,7 +13,7 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
-depends = ["ts:check"]
+depends = ["ts:check", "work-graph:db"]
 run = "scripts/test-template.sh"
 
 [tasks."ts:install"]
@@ -24,3 +24,9 @@ run = "pnpm install --frozen-lockfile"
 description = "Lint, typecheck and test every TypeScript package"
 depends = ["ts:install"]
 run = ["pnpm lint", "pnpm typecheck", "pnpm test"]
+
+[tasks."work-graph:db"]
+description = "Check Work Graph migrations and run its integration tests against disposable PostgreSQL"
+depends = ["ts:install"]
+dir = "packages/work-graph-db"
+run = ["pnpm db:check", "pnpm test:integration"]
