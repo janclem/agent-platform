@@ -33,6 +33,10 @@ Copier template. NixOS machines live in `homelab/` (a flake with one directory p
 - Keep config declarative. Multi-line scripts go in checked-in script files, not inline in YAML/HCL;
   scripts a composite action needs live next to its `action.yml`.
 
+## Decisions
+Architecture decisions are in [docs/adr/](docs/adr/index.md). Record a new architectural
+choice there with the `adr-writing` skill; supersede rather than edit accepted records.
+
 ## Delivery
 [docs/runbooks/agent-platform-delivery.md](docs/runbooks/agent-platform-delivery.md) defines the
 gates, the evidence that proves a change is done, and what needs the owner's say-so.
