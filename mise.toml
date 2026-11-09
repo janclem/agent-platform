@@ -3,6 +3,7 @@ age = "1.3.2"
 gitleaks = "8.30.1"
 jactionlint = "2.5.0"
 node = "26.13.0"
+"github:oasdiff/oasdiff" = "1.36.0"
 "pipx:copier" = "9.19.1"
 pnpm = "12.18.0"
 shellcheck = "0.11.0"
@@ -13,7 +14,7 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
-depends = ["ts:check", "work-graph:db"]
+depends = ["ts:check", "work-graph:db", "work-graph:api"]
 run = "scripts/test-template.sh"
 
 [tasks."ts:install"]
@@ -30,3 +31,21 @@ description = "Check Work Graph migrations and run its integration tests against
 depends = ["ts:install"]
 dir = "packages/work-graph-db"
 run = ["pnpm db:check", "pnpm test:integration"]
+
+[tasks."work-graph:api"]
+description = "Check the Work Graph API contract, CLI build, Worker runtime, and HTTP integration tests"
+depends = ["ts:install"]
+run = [
+  "pnpm --filter work-graph-api lint:api",
+  "scripts/check-openapi-breaking.sh services/work-graph-api/openapi.json",
+  "pnpm --filter work-graph-cli openapi:check",
+  "pnpm --filter work-graph-cli build:check",
+  "pnpm --filter work-graph-cli pack:check",
+  "pnpm --filter work-graph-api smoke:local-runtime",
+  "pnpm --filter work-graph-api test:integration",
+]
+
+[tasks."work-graph-cli:install"]
+description = "Build and globally install the work-graph CLI from this checkout"
+depends = ["ts:install"]
+run = "scripts/install-work-graph-cli.sh"

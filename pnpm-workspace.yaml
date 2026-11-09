@@ -1,10 +1,15 @@
 packages:
   - "packages/*"
+  - "services/*"
 
 # Dependency lifecycle scripts stay off unless a package needs one; list each
 # exception here so installs are reproducible and side-effect free.
 allowBuilds:
+  # Spectral pulls Scarf for optional install telemetry; linting does not need it.
+  "@scarf/scarf": false
   esbuild: false
+  sharp: false
+  workerd: false
 
 # drizzle-kit (dev-only) still pulls @esbuild-kit/core-utils, which pins an
 # esbuild affected by GHSA-67mh-4wv8-2f99. Its transform calls work with the
