@@ -6,7 +6,8 @@ Personal agent automation platform. Infrastructure lives in `infra/` (Terraform,
 with thin pointers in `.claude/skills/` (read by Claude Code); project repos get copies from the
 Copier template. NixOS machines live in `homelab/` (a flake with one directory per host under
 `homelab/hosts/`). TypeScript packages live in `packages/`, a pnpm workspace;
-`mise run ts:check` lints (Biome), typechecks and tests them. More areas (services/) will be added.
+`mise run ts:check` lints (Biome), typechecks and tests them.
+`mise run work-graph:db` checks migrations and runs the database integration tests; it needs Docker. More areas (services/) will be added.
 
 ## Tooling
 - All tools are pinned in `mise.toml`. Run `mise install` first; use tools via mise.
