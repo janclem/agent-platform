@@ -26,3 +26,4 @@ after acceptance; a later record supersedes them. See the `adr-writing` skill.
 | [19](0019-work-graph-github-evidence-app.md) | Observe delivery evidence with a dedicated read-only GitHub App and queued webhooks | Accepted |
 | [20](0020-work-graph-immutable-events.md) | Record every Work Graph state change as an immutable event, and defer analytics | Accepted |
 | [21](0021-work-graph-backups-r2.md) | Back up the Work Graph database nightly to R2 with restore drills | Accepted |
+| [22](0022-work-graph-workers-free-until-cpu-limit.md) | Run the Work Graph API on Workers Free until requests exceed its CPU limit | Accepted |
