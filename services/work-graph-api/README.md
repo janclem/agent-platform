@@ -22,12 +22,13 @@ After changing a route, run `pnpm --filter work-graph-api openapi:generate` and
 
 ## Request limits
 
-Production requires the Workers Paid plan. Queue reads and critical-path
-projections process the dependency graph in the Worker and exceed the Free
-plan's 10 ms CPU limit once the graph contains several hundred tickets. The
-Wrangler config sets a 5-second per-request ceiling. A deployment to a Free
-account must fail instead of silently running with a limit that returns
-Cloudflare error 1102 under normal agent traffic.
+The Worker starts on the Workers Free plan (ADR 22). Queue reads and
+critical-path projections process the dependency graph in the Worker, and hq
+found they exceed the Free plan's 10 ms CPU limit once the graph holds several
+hundred tickets. Cloudflare then answers with error 1102 and the Worker's
+observability logs record an `exceededCpu` outcome. That outcome is the trigger
+to move to Workers Paid and restore an explicit `[limits] cpu_ms` ceiling in
+`wrangler.toml`, which Free accounts can't set.
 
 The database migration sets a 5-second lock timeout, 15-second statement
 timeout, and 10-second idle-in-transaction timeout on the dedicated

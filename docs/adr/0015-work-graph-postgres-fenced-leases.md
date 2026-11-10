@@ -52,4 +52,4 @@ overwriting the new one. ADR 13 places PostgreSQL on Neon behind Hyperdrive. Rob
 - The Workers Free plan allows
   [10 ms of CPU per request](https://developers.cloudflare.com/workers/platform/limits).
   Database waits don't count, but if graph projections exceed it, the account moves to
-  Workers Paid.
+  Workers Paid (ADR 22).
