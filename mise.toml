@@ -42,6 +42,7 @@ run = [
   "pnpm --filter work-graph-cli build:check",
   "pnpm --filter work-graph-cli pack:check",
   "pnpm --filter work-graph-api smoke:local-runtime",
+  "services/work-graph-api/scripts/deploy.sh --dry-run",
   "pnpm --filter work-graph-api test:integration",
 ]
 
@@ -80,3 +81,18 @@ description = "Assert that Work Graph Terraform state contains no credentials"
 depends = ["work-graph-infra:init"]
 dir = "infra/work-graph"
 run = "scripts/op-terraform-env.sh scripts/check-state-for-credentials.sh"
+
+[tasks."work-graph:migrate"]
+description = "Apply Work Graph migrations to production Neon with DATABASE_URL from Doppler"
+depends = ["ts:install"]
+dir = "packages/work-graph-db"
+run = "doppler run --project work-graph --config prd_work_graph --only-secrets DATABASE_URL -- pnpm db:migrate"
+
+[tasks."work-graph:deploy"]
+description = "Deploy the Work Graph Worker (token from 1Password, Hyperdrive ID from Doppler)"
+depends = ["ts:install"]
+run = "services/work-graph-api/scripts/deploy.sh"
+
+[tasks."work-graph:smoke-production"]
+description = "Check production Access and queue reads with the agents' service token"
+run = "services/work-graph-api/scripts/smoke-production.sh"

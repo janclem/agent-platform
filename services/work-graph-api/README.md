@@ -1,9 +1,23 @@
 # Work Graph API
 
 This Cloudflare Worker serves the Work Graph REST contract in `openapi.json` (ADR 16).
-Deployment comes with the infrastructure step. Until then it runs locally and in CI only.
-In production it will sit behind Cloudflare Access with a Service Auth policy (ADR 17). The
-Wrangler config disables `workers.dev` and preview URLs.
+Production runs at `https://work-graph.clemetson.me` behind Cloudflare Access with a
+Service Auth policy (ADR 17). `infra/work-graph` owns the service name, domain, Access app,
+and Hyperdrive; Wrangler owns application versions. The Wrangler config disables
+`workers.dev` and preview URLs.
+
+## Deploying
+
+```bash
+mise run work-graph:migrate            # migrations against Neon directly, DATABASE_URL from Doppler
+mise run work-graph:deploy             # Cloudflare deploy token from 1Password, Hyperdrive ID from Doppler
+mise run work-graph:smoke-production   # Access rejects anonymous requests; queue reads work
+```
+
+Migrate before deploying, since new code may need the new schema. `scripts/deploy.sh`
+substitutes the Hyperdrive ID into a private temporary copy of `wrangler.toml`; the
+committed file keeps a placeholder. `mise run work-graph:api` runs a credential-free
+`deploy.sh --dry-run` build.
 
 ## Checks
 
