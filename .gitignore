@@ -13,3 +13,7 @@ dist/
 
 # Saved Terraform plans
 .planfile
+
+# Wrangler local state and generated deploy configs
+.wrangler/
+.wrangler.work-graph.*.toml
