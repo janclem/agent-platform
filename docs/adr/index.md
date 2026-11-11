@@ -28,3 +28,4 @@ after acceptance; a later record supersedes them. See the `adr-writing` skill.
 | [21](0021-work-graph-backups-r2.md) | Back up the Work Graph database nightly to R2 with restore drills | Accepted |
 | [22](0022-work-graph-workers-free-until-cpu-limit.md) | Run the Work Graph API on Workers Free until requests exceed its CPU limit | Accepted |
 | [23](0023-cedar-authorization-design.md) | Authorize Work Graph clients with a shared fail-closed Cedar package and trusted profile mapping | Accepted |
+| [23](0023-doppler-for-machine-secrets.md) | Keep machine secrets in Doppler and human root credentials in 1Password | Accepted |

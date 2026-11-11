@@ -1,8 +1,8 @@
 # Agent guide
 
 ## Repo
-Personal agent automation platform. Infrastructure lives in `infra/` (Terraform, HCP workspace
-`terraform-clemetson/foundation`). Shared agent skills live in `.agents/skills/` (read by Codex),
+Personal agent automation platform. Infrastructure lives in `infra/` (Terraform, HCP workspaces
+`terraform-clemetson/foundation` and `work-graph`). Shared agent skills live in `.agents/skills/` (read by Codex),
 with thin pointers in `.claude/skills/` (read by Claude Code); project repos get copies from the
 Copier template. NixOS machines live in `homelab/` (a flake with one directory per host under
 `homelab/hosts/`). TypeScript packages live in `packages/` and deployable services in `services/`, one pnpm workspace;
@@ -14,7 +14,10 @@ Worker in workerd, and runs the HTTP integration tests. After changing a route, 
 
 ## Tooling
 - All tools are pinned in `mise.toml`. Run `mise install` first; use tools via mise.
-- Terraform runs remotely in HCP. Provider credentials live in the HCP workspace, never locally.
+- `infra/foundation` runs remotely in HCP; its provider credentials live in the HCP workspace.
+- `infra/work-graph` keeps state in HCP but runs locally (`mise run work-graph-infra:plan`), with
+  credentials resolved from 1Password by `op run` at runtime. Its helpers write generated
+  credentials to Doppler, never to state (ADR 23). See `infra/work-graph/README.md`.
 
 ## Rules
 - Never commit secrets. Encrypted files via `sops` only; plaintext secrets are a hard stop.
