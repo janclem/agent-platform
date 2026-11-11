@@ -6,6 +6,8 @@ date: 2026-11-07
 
 # 4. Keep secrets in 1Password and service secret stores
 
+> Amended by [ADR 23](0023-doppler-for-machine-secrets.md): machine secrets live in Doppler.
+
 Secrets live in 1Password (vault `agent-platform`) and in each service's own secret
 store. A secret is committed only when encrypted with sops and age.
 

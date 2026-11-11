@@ -14,7 +14,7 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
-depends = ["ts:check", "work-graph:db", "work-graph:api"]
+depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph-infra:check"]
 run = "scripts/test-template.sh"
 
 [tasks."ts:install"]
@@ -49,3 +49,34 @@ run = [
 description = "Build and globally install the work-graph CLI from this checkout"
 depends = ["ts:install"]
 run = "scripts/install-work-graph-cli.sh"
+
+[tasks."work-graph-infra:check"]
+description = "Check that Work Graph Terraform keeps generated credentials out of configuration"
+run = "infra/work-graph/scripts/check-security-boundary.sh"
+
+[tasks."work-graph-infra:init"]
+description = "Initialize Work Graph Terraform against its HCP workspace"
+dir = "infra/work-graph"
+run = "scripts/op-terraform-env.sh terraform init -input=false"
+
+[tasks."work-graph-infra:plan"]
+description = "Plan Work Graph infrastructure into infra/work-graph/.planfile"
+depends = ["work-graph-infra:init"]
+dir = "infra/work-graph"
+run = "scripts/op-terraform-env.sh terraform plan -input=false -out .planfile"
+
+[tasks."work-graph-infra:apply"]
+description = "Apply the reviewed Work Graph plan, then assert state holds no credentials"
+depends = ["work-graph-infra:init"]
+dir = "infra/work-graph"
+run = [
+  "scripts/op-terraform-env.sh terraform apply -input=false .planfile",
+  "rm -f .planfile",
+  "scripts/op-terraform-env.sh scripts/check-state-for-credentials.sh",
+]
+
+[tasks."work-graph-infra:state-check"]
+description = "Assert that Work Graph Terraform state contains no credentials"
+depends = ["work-graph-infra:init"]
+dir = "infra/work-graph"
+run = "scripts/op-terraform-env.sh scripts/check-state-for-credentials.sh"

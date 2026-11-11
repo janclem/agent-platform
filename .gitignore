@@ -10,3 +10,6 @@ result-*
 node_modules/
 coverage/
 dist/
+
+# Saved Terraform plans
+.planfile
