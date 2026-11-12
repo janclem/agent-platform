@@ -50,7 +50,8 @@ work-graph release cli-8 \
 stdout. Do not add a bare `--json` output flag. `critical-path --json` is the
 one exception because that command otherwise renders a human-readable summary.
 
-Codex sessions use their thread ID as worker provenance. Other clients should
+Codex sessions use their thread ID and Claude Code sessions their session ID
+(`codex:<id>`, `claude-code:<id>`) as worker provenance. Other clients should
 set `WORK_GRAPH_WORKER_ID` once. Commands that already name a ticket find that
 worker's active lease and fencing epoch. Scripts may instead pass `--lease-id`
 and `--epoch` together to avoid the lookup.
@@ -90,9 +91,15 @@ API URL or cross-origin redirect from receiving the Access headers. Credential
 values are read only from the environment. The command parser has no credential
 flags.
 
-For the production service, keep the URL, allowlist, and Access pair together in
-1Password and load them as one unit with `op run --env-file <file> -- work-graph ...`,
-where the file holds `op://` references, never values.
+For the production service, set nothing. When `WORK_GRAPH_API_URL` is unset and no
+`--api-url` is given, API commands re-run themselves under
+`doppler run --project work-graph --config prd_work_graph_agents --only-secrets ...`,
+which supplies exactly the URL, allowlist and Access pair (ADR 23). That config
+holds references to the production values, never copies. The operator's Doppler
+login resolves it locally; elsewhere, set `DOPPLER_TOKEN` to a read-only service
+token for it. Doppler is found only at fixed install paths (Homebrew, system,
+NixOS) or the absolute path in `WORK_GRAPH_DOPPLER_BIN`. `help`, `prime`,
+`--version` and `self-update` never start Doppler.
 
 Safe reads and idempotency-keyed mutations retry HTTP 503 responses with
 bounded exponential backoff. This includes structured database-capacity
@@ -478,5 +485,4 @@ the committed generated client or Zod schemas differ from a clean generation.
 ## Origin
 
 Adapted from Robbie Palmer's [`hq`](https://github.com/Robbie-Palmer/hq)
-`packages/work-graph-cli` at commit `6c08a3b`, under the AGPL-3.0. Credentials come from
-environment variables instead of hq's Doppler bootstrap.
+`packages/work-graph-cli` at commit `6c08a3b`, under the AGPL-3.0.

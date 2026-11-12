@@ -1166,6 +1166,10 @@ describe("Given agent-facing Work Graph commands", () => {
       WORK_GRAPH_API_URL: API_URL,
       CODEX_THREAD_ID: "thread-123",
     });
+    const claude = harness(undefined, {
+      WORK_GRAPH_API_URL: API_URL,
+      CLAUDE_CODE_SESSION_ID: "session-456",
+    });
     await next.run(["claim", "--worker-id", "agent-a"]);
     await specified.run([
       "claim",
@@ -1176,6 +1180,7 @@ describe("Given agent-facing Work Graph commands", () => {
       "120",
     ]);
     await codex.run(["claim"]);
+    await claude.run(["claim"]);
     await scoped.run([
       "claim",
       "--worker-id",
@@ -1204,6 +1209,10 @@ describe("Given agent-facing Work Graph commands", () => {
     });
     expect(codex.requests[0]?.body).toEqual({
       workerId: "codex:thread-123",
+      leaseDurationSeconds: 900,
+    });
+    expect(claude.requests[0]?.body).toEqual({
+      workerId: "claude-code:session-456",
       leaseDurationSeconds: 900,
     });
     expect(scoped.requests[0]?.body).toEqual({
