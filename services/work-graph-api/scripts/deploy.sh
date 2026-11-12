@@ -6,7 +6,8 @@
 set +x
 set -euo pipefail
 umask 077
-cd "$(dirname "${BASH_SOURCE[0]}")/.."
+script_path="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
+cd "$(dirname "$script_path")/.."
 
 dry_run=false
 if [[ "${1:-}" == "--dry-run" && $# -eq 1 ]]; then
@@ -23,7 +24,7 @@ if [[ "$dry_run" != true ]]; then
       exit 1
     fi
     export WORK_GRAPH_OP_WRAPPED=1
-    exec op run --env-file op.env -- bash "$0"
+    exec op run --env-file op.env -- bash "$script_path"
   fi
   if [[ -z "${WORK_GRAPH_HYPERDRIVE_ID:-}" ]]; then
     if [[ "${WORK_GRAPH_DOPPLER_WRAPPED:-}" == "1" ]] || ! command -v doppler >/dev/null 2>&1; then
@@ -36,7 +37,7 @@ if [[ "$dry_run" != true ]]; then
       --config "${DOPPLER_WORK_GRAPH_CONFIG:-prd_work_graph}" \
       --only-secrets WORK_GRAPH_HYPERDRIVE_ID \
       --preserve-env=CLOUDFLARE_API_TOKEN,CLOUDFLARE_ACCOUNT_ID,WORK_GRAPH_OP_WRAPPED,WORK_GRAPH_DOPPLER_WRAPPED \
-      -- bash "$0"
+      -- bash "$script_path"
   fi
 fi
 
