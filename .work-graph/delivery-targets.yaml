@@ -1,0 +1,35 @@
+# Delivery targets for janclem/agent-platform, read by the Work Graph observer
+# (ADR 19) during reconciliation. A merged PR's changed paths select the targets
+# in its ticket's project; each target names the CI workflow runs that must pass
+# and the GitHub deployment environments that must report success before the
+# ticket can become a completion candidate. Same shape as the catalog.records of
+# hq's platform catalog; only delivery-target records are read.
+#
+# Every target needs a production environment, so only paths that deploy through
+# a GitHub environment belong here. The CLI is included because CD redeploys on
+# CLI changes, which records the deployment. Terraform, backups and platform paths
+# are delivered by manual applies, release tags or the main-branch CI run; add
+# them once those emit a GitHub deployment. With a single target, every changed
+# path falls back to it.
+schema_version: 1
+catalog:
+  records:
+    - id: delivery-target:work-graph/service
+      kind: delivery-target
+      name: Work Graph API, observer and CLI
+      project: project:work-graph
+      repository: janclem/agent-platform
+      source_path_bindings:
+        - { path: services/work-graph-api, mode: exclusive, subjects: [component:work-graph/api] }
+        - { path: services/work-graph-observer, mode: exclusive, subjects: [component:work-graph/observer] }
+        - { path: packages/work-graph-db, mode: exclusive, subjects: [component:work-graph/db] }
+        - { path: packages/work-graph-domain, mode: exclusive, subjects: [component:work-graph/domain] }
+        - { path: packages/work-graph-cli, mode: exclusive, subjects: [component:work-graph/cli] }
+        - { path: packages/github-client, mode: exclusive, subjects: [] }
+        - { path: packages/ts-base, mode: shared, subjects: [] }
+        - { path: .github/workflows/work-graph-cd.yml, mode: exclusive, subjects: [] }
+      subjects: [component:work-graph/api, component:work-graph/observer, component:work-graph/cli]
+      github:
+        required_ci_names: [CI]
+        production_environments: [production-work-graph]
+

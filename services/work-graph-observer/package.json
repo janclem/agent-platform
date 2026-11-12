@@ -1,0 +1,25 @@
+{
+  "name": "work-graph-observer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Signed GitHub webhook ingress and delivery-evidence consumer for the Work Graph",
+  "type": "module",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "github-client": "workspace:*",
+    "ts-base": "workspace:*",
+    "work-graph-db": "workspace:*",
+    "work-graph-domain": "workspace:*",
+    "yaml": "^2.8.2"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.0.0",
+    "@types/node": "^24",
+    "typescript": "^6.0.0",
+    "vitest": "^5.0.0",
+    "wrangler": "^4"
+  }
+}

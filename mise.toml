@@ -16,7 +16,7 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
-depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph-infra:check", "work-graph:backup-check"]
+depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph:observer", "work-graph-infra:check", "work-graph:backup-check"]
 run = "scripts/test-template.sh"
 
 [tasks."ts:install"]
@@ -47,6 +47,16 @@ run = [
   "services/work-graph-api/scripts/deploy.sh --dry-run",
   "pnpm --filter work-graph-api test:integration",
 ]
+
+[tasks."work-graph:observer"]
+description = "Build the production Work Graph observer bundle without uploading it"
+depends = ["ts:install"]
+run = "services/work-graph-observer/scripts/deploy.sh --dry-run"
+
+[tasks."work-graph:observer-deploy"]
+description = "Install the observer's secrets and deploy it (values from Doppler)"
+depends = ["ts:install"]
+run = "services/work-graph-observer/scripts/deploy.sh"
 
 [tasks."work-graph-cli:install"]
 description = "Build and globally install the work-graph CLI from this checkout"
