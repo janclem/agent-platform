@@ -36,3 +36,19 @@ database to R2 with age encryption and restore drills.
 - Restores need the age key from 1Password, so a leaked bucket alone exposes nothing.
 - One more scheduled workflow, bucket, and two scoped credentials to maintain. R2 storage
   beyond its [free allowance](https://developers.cloudflare.com/r2/pricing/) costs money.
+
+## Implementation notes (2026-11-12)
+
+- **Nightly, not weekly.** Robbie backs up weekly to stay inside Neon Free's 5 GB monthly
+  transfer. The Work Graph dump is about 120 KB, so nightly costs nothing.
+- **Retention:** `daily/` 14 days, `weekly/` 60 days, `monthly/` 400 days, and every object
+  locked for 8 days.
+- **Restore drills in two parts.** The private key stays out of CI, so the nightly job cannot
+  decrypt. Instead it streams the one `pg_dump` into both `age` and a scratch `pg_restore`,
+  and checks the restored copy on every run. A monthly manual drill
+  (`mise run work-graph:restore-drill`) decrypts a stored archive with the key from 1Password
+  and runs the same checks.
+- **Separate credentials.** The backup has its own Doppler config
+  (`prd_work_graph_backup`) and GitHub environment, so it never sees the deploy token or the
+  owner database URL. See `backups/README.md`.
+

@@ -1,0 +1,28 @@
+{
+  "rules": [
+    {
+      "id": "expire-daily-14d",
+      "enabled": true,
+      "conditions": { "prefix": "daily/" },
+      "deleteObjectsTransition": { "condition": { "type": "Age", "maxAge": 1209600 } }
+    },
+    {
+      "id": "expire-weekly-60d",
+      "enabled": true,
+      "conditions": { "prefix": "weekly/" },
+      "deleteObjectsTransition": { "condition": { "type": "Age", "maxAge": 5184000 } }
+    },
+    {
+      "id": "expire-monthly-400d",
+      "enabled": true,
+      "conditions": { "prefix": "monthly/" },
+      "deleteObjectsTransition": { "condition": { "type": "Age", "maxAge": 34560000 } }
+    },
+    {
+      "id": "abort-multipart-1d",
+      "enabled": true,
+      "conditions": { "prefix": "" },
+      "abortMultipartUploadsTransition": { "condition": { "type": "Age", "maxAge": 86400 } }
+    }
+  ]
+}

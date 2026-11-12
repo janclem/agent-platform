@@ -1,0 +1,10 @@
+{
+  "rules": [
+    {
+      "id": "lock-all-8d",
+      "enabled": true,
+      "prefix": "",
+      "condition": { "type": "Age", "maxAgeSeconds": 691200 }
+    }
+  ]
+}

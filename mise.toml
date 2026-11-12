@@ -1,5 +1,6 @@
 [tools]
 age = "1.3.2"
+awscli = "2.39.7"
 doppler = "3.77.1"
 gitleaks = "8.30.1"
 jactionlint = "2.5.0"
@@ -15,7 +16,7 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
-depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph-infra:check"]
+depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph-infra:check", "work-graph:backup-check"]
 run = "scripts/test-template.sh"
 
 [tasks."ts:install"]
@@ -51,6 +52,26 @@ run = [
 description = "Build and globally install the work-graph CLI from this checkout"
 depends = ["ts:install"]
 run = "scripts/install-work-graph-cli.sh"
+
+[tasks."work-graph:backup-check"]
+description = "Shellcheck the backup scripts and validate the R2 policy files"
+run = [
+  "shellcheck -x backups/scripts/*.sh",
+  "jq -e '.rules | length > 0' backups/r2-lifecycle.json backups/r2-lock.json >/dev/null",
+]
+
+[tasks."work-graph:backup"]
+description = "Dump the Work Graph, restore-check it, and upload the age-encrypted archive to R2 (ADR 21)"
+run = "backups/scripts/backup-work-graph.sh"
+
+[tasks."work-graph:restore-drill"]
+description = "Restore an R2 backup with the private age key into a throwaway PostgreSQL and check it"
+run = "backups/scripts/restore-drill.sh"
+
+[tasks."work-graph:backup-policies"]
+description = "Apply the backup bucket's R2 lifecycle and lock rules from backups/r2-*.json"
+depends = ["ts:install"]
+run = "backups/scripts/apply-r2-policies.sh"
 
 [tasks."work-graph-infra:check"]
 description = "Check that Work Graph Terraform keeps generated credentials out of configuration"
