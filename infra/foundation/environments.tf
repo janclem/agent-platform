@@ -19,3 +19,22 @@ resource "github_repository_environment_deployment_policy" "work_graph_productio
   environment    = github_repository_environment.work_graph_production.environment
   branch_pattern = "main"
 }
+
+# Work Graph backup (.github/workflows/work-graph-backup.yml). Holds DOPPLER_TOKEN,
+# a read-only service token for Doppler work-graph/prd_work_graph_backup (ADR 21).
+# No required reviewers: an approval gate would block the nightly schedule.
+resource "github_repository_environment" "work_graph_backup" {
+  repository  = module.repository["agent-platform"].name
+  environment = "production-work-graph-backup"
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}
+
+resource "github_repository_environment_deployment_policy" "work_graph_backup_main" {
+  repository     = github_repository_environment.work_graph_backup.repository
+  environment    = github_repository_environment.work_graph_backup.environment
+  branch_pattern = "main"
+}
