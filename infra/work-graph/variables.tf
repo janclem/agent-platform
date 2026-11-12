@@ -141,3 +141,47 @@ variable "access_service_token_name" {
     error_message = "access_service_token_name must contain from 3 through 200 characters."
   }
 }
+
+variable "github_observer_hostname" {
+  description = "Public hostname for signed GitHub webhook delivery"
+  type        = string
+  default     = "work-graph-observer.clemetson.me"
+
+  validation {
+    condition     = var.github_observer_hostname != var.work_graph_hostname && can(regex("^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$", var.github_observer_hostname))
+    error_message = "github_observer_hostname must be a lowercase DNS name distinct from the Work Graph API hostname."
+  }
+}
+
+variable "github_observer_worker_name" {
+  description = "Cloudflare Worker service name for GitHub webhook ingress"
+  type        = string
+  default     = "work-graph-observer"
+
+  validation {
+    condition     = can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", var.github_observer_worker_name))
+    error_message = "github_observer_worker_name must be a lowercase Cloudflare service name."
+  }
+}
+
+variable "github_deliveries_queue_name" {
+  description = "Queue for verified GitHub deliveries"
+  type        = string
+  default     = "work-graph-github-deliveries"
+
+  validation {
+    condition     = can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", var.github_deliveries_queue_name))
+    error_message = "github_deliveries_queue_name must be a lowercase Cloudflare queue name."
+  }
+}
+
+variable "github_deliveries_dead_letter_queue_name" {
+  description = "Dead-letter queue for GitHub deliveries that exhaust retries"
+  type        = string
+  default     = "work-graph-github-deliveries-dlq"
+
+  validation {
+    condition     = var.github_deliveries_dead_letter_queue_name != var.github_deliveries_queue_name && can(regex("^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$", var.github_deliveries_dead_letter_queue_name))
+    error_message = "github_deliveries_dead_letter_queue_name must be a distinct lowercase Cloudflare queue name."
+  }
+}
