@@ -30,6 +30,9 @@ handing each agent and job only what it needs.
   Hyperdrive ID, Access service-token pair) and anything agents, Workers deploys, or CI read at
   runtime. One Doppler project per service, with a branch config per consumer, for example
   `work-graph/prd_work_graph`.
+- A credential someone creates by hand still goes in Doppler when automation uses it. The
+  Workers deploy token is one: CI deploys with it on every merge. Credentials that only a
+  person uses, such as the Terraform provider tokens, stay in 1Password.
 - **1Password** (vault `agent-platform`) holds root and bootstrap credentials that people
   create, such as provider API tokens, the HCP and GitHub tokens, Doppler service tokens used
   by operators, the sops age key, and recovery codes. Local runs read them through `op run`

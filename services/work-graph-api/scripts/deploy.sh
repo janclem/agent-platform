@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Adapted from Robbie-Palmer/hq (workers/work-graph-api/scripts/deploy.sh), AGPL-3.0.
-# Deploys the Worker with the Terraform-managed Hyperdrive ID. Locally, the
-# Cloudflare deploy token comes from 1Password (op.env) and the Hyperdrive ID
-# from Doppler (ADR 23); CI passes all three as environment variables.
+# Deploys the Worker with the Terraform-managed Hyperdrive ID. Missing values
+# (the Cloudflare deploy token, account ID and Hyperdrive ID) are read from
+# Doppler (ADR 23), locally through the operator's login and in CI through a
+# read-only service token.
 set +x
 set -euo pipefail
 umask 077
@@ -17,26 +18,25 @@ elif (($# > 0)); then
   exit 2
 fi
 
+deploy_secrets=(CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID WORK_GRAPH_HYPERDRIVE_ID)
 if [[ "$dry_run" != true ]]; then
-  if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
-    if [[ "${WORK_GRAPH_OP_WRAPPED:-}" == "1" ]] || ! command -v op >/dev/null 2>&1; then
-      echo "Cannot deploy Work Graph: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are required." >&2
-      exit 1
+  missing=false
+  for name in "${deploy_secrets[@]}"; do
+    if [[ -z "${!name:-}" ]]; then
+      missing=true
     fi
-    export WORK_GRAPH_OP_WRAPPED=1
-    exec op run --env-file op.env -- bash "$script_path"
-  fi
-  if [[ -z "${WORK_GRAPH_HYPERDRIVE_ID:-}" ]]; then
+  done
+  if [[ "$missing" == true ]]; then
     if [[ "${WORK_GRAPH_DOPPLER_WRAPPED:-}" == "1" ]] || ! command -v doppler >/dev/null 2>&1; then
-      echo "Cannot deploy Work Graph: WORK_GRAPH_HYPERDRIVE_ID is required." >&2
+      echo "Cannot deploy Work Graph: ${deploy_secrets[*]} are required." >&2
       exit 1
     fi
     export WORK_GRAPH_DOPPLER_WRAPPED=1
     exec doppler run \
       --project "${DOPPLER_PROJECT:-work-graph}" \
       --config "${DOPPLER_WORK_GRAPH_CONFIG:-prd_work_graph}" \
-      --only-secrets WORK_GRAPH_HYPERDRIVE_ID \
-      --preserve-env=CLOUDFLARE_API_TOKEN,CLOUDFLARE_ACCOUNT_ID,WORK_GRAPH_OP_WRAPPED,WORK_GRAPH_DOPPLER_WRAPPED \
+      --only-secrets "$(IFS=,; echo "${deploy_secrets[*]}")" \
+      --preserve-env=WORK_GRAPH_DOPPLER_WRAPPED \
       -- bash "$script_path"
   fi
 fi
