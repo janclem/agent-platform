@@ -67,7 +67,9 @@ mise run work-graph:observer          # credential-free dry-run build (part of c
 mise run work-graph:observer-deploy   # install secrets and deploy
 ```
 
-The deploy reads the Cloudflare deploy token, Hyperdrive ID and the five `GITHUB_*`
+Every merge to `main` that touches the Work Graph runs `work-graph-cd.yml`, which deploys
+the observer after the API's migration, deploy and smoke test. The deploy reads the
+Cloudflare deploy token, Hyperdrive ID and the five `GITHUB_*`
 runtime values from Doppler, installs the runtime values as Worker secrets with
 `wrangler secret bulk`, then deploys. The token needs Workers Scripts and Queues
 edit. Terraform (`infra/work-graph`) owns the service name, hostname and queues.

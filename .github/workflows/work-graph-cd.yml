@@ -1,7 +1,9 @@
 # Adapted from Robbie-Palmer/hq (.github/workflows/work-graph-api-cd.yml), AGPL-3.0.
-# Migrates, deploys and smoke-tests the Work Graph on every merge to main. The
-# environment holds one secret, a read-only Doppler service token for
-# work-graph/prd_work_graph (ADR 23); each task reads only the values it needs.
+# Migrates, deploys and smoke-tests the Work Graph API, then deploys the GitHub
+# observer, on every merge to main. The environment holds one secret, a
+# read-only Doppler service token for work-graph/prd_work_graph (ADR 23); each
+# task reads only the values it needs.
+
 name: Work Graph CD
 
 on:
@@ -61,5 +63,11 @@ jobs:
 
       - name: Smoke-test Access and queue
         run: mise run work-graph:smoke-production
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      # After the migration, so the consumer never writes to an older schema.
+      - name: Deploy GitHub observer
+        run: mise run work-graph:observer-deploy
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
