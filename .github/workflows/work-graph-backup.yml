@@ -1,0 +1,64 @@
+# Adapted from Robbie-Palmer/hq (.github/workflows/work-graph-database-backup.yml), AGPL-3.0.
+# Nightly encrypted Work Graph backup with an in-job restore check (ADR 21).
+# The environment holds one secret, a read-only Doppler service token for
+# work-graph/prd_work_graph_backup: the backup login, the bucket-scoped R2
+# token, and the public age recipient.
+name: Work Graph backup
+
+on:
+  schedule:
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: work-graph-backup
+  # Serializes weekly and monthly promotion; never interrupt an upload.
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    environment:
+      name: production-work-graph-backup
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools pinned in mise.toml
+        uses: $/.github/actions/setup-mise
+
+      - name: Back up, restore-check and upload
+        run: mise run work-graph:backup
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+  notify-failure:
+    name: notify-failure
+    needs: backup
+    if: ${{ always() && needs.backup.result == 'failure' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      issues: write
+    steps:
+      - name: Open or reuse a failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          existing=$(gh issue list --search "Work Graph backup failed in:title" --state open --json number --jq '.[0].number // empty')
+          if [[ -n "$existing" ]]; then
+            gh issue comment "$existing" --body "Failed again: $RUN_URL"
+          else
+            gh issue create --title "Work Graph backup failed" --body "The nightly Work Graph backup or its restore check failed: $RUN_URL
+
+          The newest good archive in R2 may now be stale. Investigate, then rerun with \`gh workflow run work-graph-backup.yml\`."
+          fi
