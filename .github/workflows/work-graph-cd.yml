@@ -10,10 +10,14 @@ on:
       - main
     paths:
       - "packages/drizzle-tooling/**"
+      - "packages/github-client/**"
       - "packages/ts-base/**"
+      - "packages/work-graph-cli/**"
       - "packages/work-graph-db/**"
       - "packages/work-graph-domain/**"
       - "services/work-graph-api/**"
+      - "services/work-graph-observer/**"
+      - ".work-graph/delivery-targets.yaml"
       - "pnpm-lock.yaml"
       - "pnpm-workspace.yaml"
       - "mise.toml"

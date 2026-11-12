@@ -2,9 +2,11 @@
   "name": "ts-base",
   "version": "0.1.0",
   "private": true,
-  "description": "Dependency-free TypeScript helpers for strings and JSON",
+  "description": "Dependency-free TypeScript helpers for strings, JSON, hashing and HTTP",
   "type": "module",
   "exports": {
+    "./crypto": "./src/crypto.ts",
+    "./http": "./src/http.ts",
     "./json": "./src/json.ts",
     "./strings": "./src/strings.ts"
   },

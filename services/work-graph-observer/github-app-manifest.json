@@ -1,0 +1,19 @@
+{
+  "name": "janclem-work-graph-observer",
+  "url": "https://github.com/janclem/agent-platform",
+  "description": "Read-only delivery evidence for the Work Graph",
+  "hook_attributes": {
+    "url": "https://work-graph-observer.clemetson.me/webhooks/github",
+    "active": true
+  },
+  "public": false,
+  "default_permissions": {
+    "actions": "read",
+    "deployments": "read",
+    "metadata": "read",
+    "pull_requests": "read",
+    "contents": "read"
+  },
+  "default_events": ["deployment_status", "pull_request", "workflow_run"],
+  "request_oauth_on_install": false
+}

@@ -62,3 +62,16 @@ ten seconds, may repeat deliveries, and does not guarantee order.
 - Queues on the Workers Free plan
   [keep messages for 24 hours](https://developers.cloudflare.com/queues/platform/limits/),
   so a consumer outage longer than that relies on reconciliation.
+
+## Implementation notes (2026-11-12)
+
+- **Contents: read.** Reconciliation reads each observed repository's delivery targets and
+  default-branch head through the Contents API, so the App also has read-only Contents
+  access. It still has no write permission.
+- **Delivery targets** live in `.work-graph/delivery-targets.yaml` in each observed
+  repository, in the `catalog.records` shape of hq's platform catalog. Every target must
+  name a GitHub deployment environment, so only paths delivered through one (today the
+  Work Graph API, observer and CLI, via `production-work-graph`) are listed. Platform,
+  Terraform and backup changes need a deployment signal before they can be added.
+- See `services/work-graph-observer/README.md`.
+
