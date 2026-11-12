@@ -28,6 +28,8 @@ The GitHub observer (`services/work-graph-observer`, ADR 19) is the Work Graph's
 - Never run `terraform apply` yourself. Run `terraform plan`, report the summary, and stop.
 - Any plan that destroys or replaces a resource must be called out explicitly.
 - `main` is protected: work on a branch, open a PR with `gh pr create`, squash-merge.
+- Find, claim and finish tickets in the Work Graph with the `work-graph` skill; link each
+  PR to its ticket as `implementation`.
 - Edit a skill in `.agents/skills/`. Add a `.claude/skills/` pointer for every new skill;
   `.github/actions/check-skills/check-skills.sh` enforces this.
 - `template/` (with `copier.yml`) is the Copier template for project repos. Its skills are

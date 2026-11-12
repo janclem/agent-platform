@@ -268,7 +268,9 @@ const workerIdentity = (environment: NodeJS.ProcessEnv): string | undefined => {
     return environment.WORK_GRAPH_WORKER_ID;
   }
   const codexId = environment.CODEX_THREAD_ID ?? environment.CODEX_SESSION_ID;
-  return codexId === undefined ? undefined : `codex:${codexId}`;
+  if (codexId !== undefined) return `codex:${codexId}`;
+  const claudeId = environment.CLAUDE_CODE_SESSION_ID;
+  return claudeId === undefined ? undefined : `claude-code:${claudeId}`;
 };
 
 const pullRequestStatus = (snapshot: PullRequestSnapshot): string => {
@@ -1223,7 +1225,7 @@ export const workGraphRouter = t.router({
         "work-graph release <ticket> --merge-evidence <url> --deployment-evidence <url>",
       ],
       rules: [
-        "Codex thread identity is automatic; WORK_GRAPH_WORKER_ID overrides it.",
+        "Codex thread and Claude Code session identities are automatic; WORK_GRAPH_WORKER_ID overrides them.",
         "An automatic claim selects only never-started work; specify a ticket ID for continuation or recovery.",
         "Ticket commands find the active lease and fencing epoch automatically.",
         "Ordinary command output is already JSON; do not append bare --json. The --json option requires a complete input object, except for critical-path --json.",

@@ -43,3 +43,20 @@ template release; `copier update` pulls later releases.
 
 Fill in **Scope** in `docs/runbooks/delivery-contract.md` before an agent deploys
 anything from the new repository.
+
+## 4. Connect it to the Work Graph
+
+Agents in the new repository use the `work-graph` skill, which the template ships. To
+let the GitHub observer record the project's PRs, CI runs and deployments as delivery
+evidence (ADR 19):
+
+1. Add the repository to the `janclem-work-graph-observer` App's installation
+   (GitHub → Settings → Applications → the App → Configure → Repository access).
+2. Add `janclem/<project>` to the JSON array in `GITHUB_ALLOWED_REPOSITORIES` in Doppler
+   `work-graph/prd_work_graph`, then redeploy the observer with
+   `mise run work-graph:observer-deploy` (or rerun Work Graph CD).
+3. Create the project's scope with `work-graph scope put <project> --kind project ...`.
+4. Once the project deploys through a GitHub environment, add
+   `.work-graph/delivery-targets.yaml` to it, naming the CI workflow and production
+   environment that prove delivery. See
+   [the observer README](../../services/work-graph-observer/README.md#correlation-and-delivery-targets).
