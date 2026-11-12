@@ -58,6 +58,11 @@ description = "Install the observer's secrets and deploy it (values from Doppler
 depends = ["ts:install"]
 run = "services/work-graph-observer/scripts/deploy.sh"
 
+[tasks."work-graph:publish-delivery-targets"]
+description = "Publish .work-graph/delivery-targets.yaml to the Work Graph API (values from Doppler)"
+depends = ["ts:install"]
+run = "services/work-graph-observer/scripts/publish-delivery-targets.sh"
+
 [tasks."work-graph-cli:install"]
 description = "Build and globally install the work-graph CLI from this checkout"
 depends = ["ts:install"]
@@ -99,13 +104,14 @@ dir = "infra/work-graph"
 run = "scripts/op-terraform-env.sh terraform plan -input=false -out .planfile"
 
 [tasks."work-graph-infra:apply"]
-description = "Apply the reviewed Work Graph plan, then assert state holds no credentials"
+description = "Apply the reviewed Work Graph plan, assert state holds no credentials, and record the deployment"
 depends = ["work-graph-infra:init"]
 dir = "infra/work-graph"
 run = [
   "scripts/op-terraform-env.sh terraform apply -input=false .planfile",
   "rm -f .planfile",
   "scripts/op-terraform-env.sh scripts/check-state-for-credentials.sh",
+  "scripts/record-deployment.sh",
 ]
 
 [tasks."work-graph-infra:state-check"]

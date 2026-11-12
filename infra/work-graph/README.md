@@ -66,7 +66,14 @@ The Neon key is an organization API key. The Doppler token is read/write on
 
 ```bash
 mise run work-graph-infra:plan    # writes infra/work-graph/.planfile
-mise run work-graph-infra:apply   # owner-approved only; applies the plan, then checks state
+mise run work-graph-infra:apply   # owner-approved only; applies the plan, checks state, records it
 ```
 
 Agents run `plan` and report; only the owner authorizes `apply`.
+
+After a successful apply from a clean checkout of the current `origin/main`,
+`scripts/record-deployment.sh` records a GitHub deployment to
+`production-work-graph-infra` for that commit, using the operator's `gh` login. That
+deployment is the delivery evidence the Work Graph observer needs before a ticket that
+changed `infra/work-graph` can count as done. Applies from anywhere else skip the record
+and say why.

@@ -34,8 +34,9 @@ an exact repository plus head or merge SHA. Branch names, titles and timing neve
 link anything. Shared commits that match several PRs stay unmatched.
 
 Whether a merged PR's ticket can become a completion candidate depends on the
-repository's [`.work-graph/delivery-targets.yaml`](../../.work-graph/delivery-targets.yaml),
-which reconciliation reads from the default branch. Each target lists source paths,
+repository's [`.work-graph/delivery-targets.yaml`](../../.work-graph/delivery-targets.yaml).
+Work Graph CD publishes it on every run (`mise run work-graph:publish-delivery-targets`,
+keyed by the file's git blob SHA), and reconciliation re-reads it from the default branch. Each target lists source paths,
 the CI workflow names that must pass, and the GitHub deployment environments that
 must report success. `tests/delivery-targets.test.ts` parses this repository's file
 with the reconciler's own parser.

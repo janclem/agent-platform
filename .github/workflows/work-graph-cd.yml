@@ -71,3 +71,10 @@ jobs:
         run: mise run work-graph:observer-deploy
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      # Completion evaluation uses the stored catalog; publishing it here means a
+      # change applies on merge instead of at the next six-hourly reconciliation.
+      - name: Publish delivery targets
+        run: mise run work-graph:publish-delivery-targets
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}

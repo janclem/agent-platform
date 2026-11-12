@@ -5,12 +5,12 @@
 # ticket can become a completion candidate. Same shape as the catalog.records of
 # hq's platform catalog; only delivery-target records are read.
 #
-# Every target needs a production environment, so only paths that deploy through
-# a GitHub environment belong here. The CLI is included because CD redeploys on
-# CLI changes, which records the deployment. Terraform, backups and platform paths
-# are delivered by manual applies, release tags or the main-branch CI run; add
-# them once those emit a GitHub deployment. With a single target, every changed
-# path falls back to it.
+# Every target needs a production environment that records a GitHub deployment:
+#   production-work-graph        Work Graph CD (API, observer, CLI)
+#   production-work-graph-infra  `mise run work-graph-infra:apply` from main
+#   production-agent-platform    ci.yml once main passes its checks
+# CD publishes this file to the Work Graph API whenever it runs, so changes apply
+# on merge; the observer's six-hourly reconciliation reads it too.
 schema_version: 1
 catalog:
   records:
@@ -28,8 +28,59 @@ catalog:
         - { path: packages/github-client, mode: exclusive, subjects: [] }
         - { path: packages/ts-base, mode: shared, subjects: [] }
         - { path: .github/workflows/work-graph-cd.yml, mode: exclusive, subjects: [] }
+        - { path: .work-graph, mode: exclusive, subjects: [] }
       subjects: [component:work-graph/api, component:work-graph/observer, component:work-graph/cli]
       github:
         required_ci_names: [CI]
         production_environments: [production-work-graph]
 
+    - id: delivery-target:work-graph/infrastructure
+      kind: delivery-target
+      name: Work Graph Terraform
+      project: project:work-graph
+      repository: janclem/agent-platform
+      source_path_bindings:
+        - { path: infra/work-graph, mode: exclusive, subjects: [component:work-graph/infrastructure] }
+      subjects: [component:work-graph/infrastructure]
+      github:
+        required_ci_names: [CI]
+        production_environments: [production-work-graph-infra]
+
+    - id: delivery-target:work-graph/backups
+      kind: delivery-target
+      name: Work Graph backups
+      project: project:work-graph
+      repository: janclem/agent-platform
+      source_path_bindings:
+        - { path: backups, mode: exclusive, subjects: [component:work-graph/backups] }
+        - { path: .github/workflows/work-graph-backup.yml, mode: exclusive, subjects: [] }
+      subjects: [component:work-graph/backups]
+      github:
+        required_ci_names: [CI]
+        production_environments: [production-agent-platform]
+
+    - id: delivery-target:agent-platform/platform
+      kind: delivery-target
+      name: Platform policy, template, skills, hosts and docs
+      project: project:agent-platform
+      repository: janclem/agent-platform
+      source_path_bindings:
+        - { path: .agents, mode: exclusive, subjects: [] }
+        - { path: .claude, mode: exclusive, subjects: [] }
+        - { path: .github, mode: shared, subjects: [] }
+        - { path: api-governance, mode: exclusive, subjects: [] }
+        - { path: docs, mode: shared, subjects: [] }
+        - { path: homelab, mode: exclusive, subjects: [] }
+        - { path: infra/foundation, mode: exclusive, subjects: [] }
+        - { path: scripts, mode: shared, subjects: [] }
+        - { path: template, mode: exclusive, subjects: [] }
+        - { path: copier.yml, mode: exclusive, subjects: [] }
+        - { path: default.json, mode: exclusive, subjects: [] }
+        - { path: renovate.json, mode: exclusive, subjects: [] }
+        - { path: AGENTS.md, mode: shared, subjects: [] }
+        - { path: README.md, mode: shared, subjects: [] }
+        - { path: mise.toml, mode: shared, subjects: [] }
+      subjects: []
+      github:
+        required_ci_names: [CI]
+        production_environments: [production-agent-platform]
