@@ -1,5 +1,6 @@
 [tools]
 age = "1.3.2"
+doppler = "3.77.1"
 gitleaks = "8.30.1"
 jactionlint = "2.5.0"
 node = "26.13.0"
@@ -89,7 +90,7 @@ dir = "packages/work-graph-db"
 run = "doppler run --project work-graph --config prd_work_graph --only-secrets DATABASE_URL -- pnpm db:migrate"
 
 [tasks."work-graph:deploy"]
-description = "Deploy the Work Graph Worker (token from 1Password, Hyperdrive ID from Doppler)"
+description = "Deploy the Work Graph Worker (deploy token and Hyperdrive ID from Doppler)"
 depends = ["ts:install"]
 run = "services/work-graph-api/scripts/deploy.sh"
 
