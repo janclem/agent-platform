@@ -1,0 +1,61 @@
+# Adapted from Robbie-Palmer/hq (.github/workflows/work-graph-api-cd.yml), AGPL-3.0.
+# Migrates, deploys and smoke-tests the Work Graph on every merge to main. The
+# environment holds one secret, a read-only Doppler service token for
+# work-graph/prd_work_graph (ADR 23); each task reads only the values it needs.
+name: Work Graph CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "packages/drizzle-tooling/**"
+      - "packages/ts-base/**"
+      - "packages/work-graph-db/**"
+      - "packages/work-graph-domain/**"
+      - "services/work-graph-api/**"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "mise.toml"
+      - ".github/workflows/work-graph-cd.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: work-graph-production
+  # Finish the active migration and deploy; keep only the newest pending run.
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    environment:
+      name: production-work-graph
+      url: https://work-graph.clemetson.me
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install tools pinned in mise.toml
+        uses: $/.github/actions/setup-mise
+
+      - name: Apply Work Graph migrations
+        run: mise run work-graph:migrate
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Deploy Worker
+        run: mise run work-graph:deploy
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Smoke-test Access and queue
+        run: mise run work-graph:smoke-production
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
