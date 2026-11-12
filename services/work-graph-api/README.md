@@ -8,6 +8,13 @@ and Hyperdrive; Wrangler owns application versions. The Wrangler config disables
 
 ## Deploying
 
+Every merge to `main` that touches the API, its packages, the lockfile or `mise.toml` runs
+[`work-graph-cd.yml`](../../.github/workflows/work-graph-cd.yml): migrate, deploy, then
+smoke-test, in the `production-work-graph` environment (deployable only from `main`). Its
+one secret, `DOPPLER_TOKEN`, is a read-only service token for `work-graph/prd_work_graph`
+that expires 2027-11-12. Rerun it with `gh workflow run work-graph-cd.yml`. The same tasks
+work locally with your Doppler login:
+
 ```bash
 mise run work-graph:migrate            # migrations against Neon directly, DATABASE_URL from Doppler
 mise run work-graph:deploy             # deploy token, account ID and Hyperdrive ID from Doppler
@@ -16,6 +23,7 @@ mise run work-graph:smoke-production   # Access rejects anonymous requests; queu
 
 All three read from Doppler `work-graph/prd_work_graph` (ADR 23) and take only the values
 they need.
+
 Migrate before deploying, since new code may need the new schema. `scripts/deploy.sh`
 substitutes the Hyperdrive ID into a private temporary copy of `wrangler.toml`; the
 committed file keeps a placeholder. `mise run work-graph:api` runs a credential-free
