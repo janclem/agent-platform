@@ -131,7 +131,6 @@ describe("GitHub observation normalization", () => {
     "success",
     "error",
     "failure",
-    "inactive",
     "in_progress",
     "queued",
     "pending",
@@ -147,12 +146,15 @@ describe("GitHub observation normalization", () => {
     expect(result?.evidence.state).toBe(
       state === "success"
         ? "success"
-        : state === "inactive"
-          ? "cancelled"
-          : ["error", "failure"].includes(state)
-            ? "failure"
-            : "pending",
+        : ["error", "failure"].includes(state)
+          ? "failure"
+          : "pending",
     );
+  });
+  it("ignores inactive deployments, which a newer deployment superseded", () => {
+    const delivery = githubDelivery("deployment_status");
+    Object.assign(delivery.payload.deployment_status as object, { state: "inactive" });
+    expect(normalizeGitHubDelivery(delivery)).toBeNull();
   });
   it("ignores incomplete runs and unsupported events", () => {
     const delivery = githubDelivery("workflow_run");

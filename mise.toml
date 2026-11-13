@@ -63,6 +63,11 @@ description = "Publish .work-graph/delivery-targets.yaml to the Work Graph API (
 depends = ["ts:install"]
 run = "services/work-graph-observer/scripts/publish-delivery-targets.sh"
 
+[tasks."work-graph:record-covered-deployments"]
+description = "Record deployments for earlier main commits that HEAD's successful deployment delivered: <environment> [--since <sha>] [--dry-run]"
+depends = ["ts:install"]
+run = "services/work-graph-observer/scripts/record-covered-deployments.sh"
+
 [tasks."work-graph-cli:install"]
 description = "Build and globally install the work-graph CLI from this checkout"
 depends = ["ts:install"]

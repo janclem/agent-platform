@@ -41,6 +41,13 @@ the CI workflow names that must pass, and the GitHub deployment environments tha
 must report success. `tests/delivery-targets.test.ts` parses this repository's file
 with the reconciler's own parser.
 
+A merged PR needs a deployment at its exact merge commit. Every deployment path runs
+`mise run work-graph:record-covered-deployments <environment>` after it succeeds, which
+also records the earlier `main` commits that deployment delivered, so superseded or
+batched commits still complete (`--dry-run` shows what it would record; `--since <sha>`
+repairs older gaps). `inactive` deployment statuses, which GitHub sets when a newer
+deployment succeeds, are stored but never become evidence.
+
 Ingestion never releases, cancels, claims or renews work.
 
 ## GitHub App
