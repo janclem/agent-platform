@@ -3,7 +3,8 @@
 # production-work-graph-infra, the delivery signal for infra/work-graph changes
 # (ADR 19). It records only from a clean checkout of the current origin/main, so
 # the deployment's commit is exactly what was applied; otherwise it explains why
-# and exits 0, leaving the apply result unchanged. Uses the operator's `gh` login.
+# and exits 0, leaving the apply result unchanged. It then records the earlier
+# main commits the apply also delivered. Uses the operator's `gh` login.
 set -euo pipefail
 
 repository="${GITHUB_REPOSITORY:-janclem/agent-platform}"
@@ -36,3 +37,6 @@ fi
 gh api "repos/$repository/deployments/$id/statuses" -f state=success \
   -f description="Terraform apply succeeded" >/dev/null
 echo "Recorded $environment deployment $id for $head."
+
+# The apply also delivered earlier main commits whose own apply never ran.
+mise run work-graph:record-covered-deployments "$environment"

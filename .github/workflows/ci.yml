@@ -9,9 +9,10 @@ on:
 permissions: {}
 
 concurrency:
-  group: ci-${{ github.ref }}
-  # Superseded PR runs are cancelled; every main commit finishes, so each one can
-  # record its delivery signal.
+  # Superseded PR runs are cancelled. Each main commit gets its own group, because
+  # a shared group would still drop superseded pending runs, and each commit
+  # records its own delivery signal.
+  group: ci-${{ github.ref == 'refs/heads/main' && github.sha || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -43,10 +44,26 @@ jobs:
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     needs: [platform, homelab]
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions: {}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      deployments: write
     environment:
       name: production-agent-platform
     steps:
-      - name: Record that main passed its checks
-        run: echo "main passed platform and homelab checks"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install tools pinned in mise.toml
+        uses: $/.github/actions/setup-mise
+        with:
+          tools: node pnpm
+
+      # A passing commit also delivers earlier platform commits whose checks
+      # failed or never ran; record those so their tickets can complete.
+      - name: Record earlier commits this run delivered
+        run: mise run work-graph:record-covered-deployments production-agent-platform
+        env:
+          GH_TOKEN: ${{ github.token }}

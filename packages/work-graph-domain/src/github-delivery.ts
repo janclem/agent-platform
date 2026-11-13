@@ -98,7 +98,6 @@ function workflowState(value: unknown): DeliveryEvidenceObservation["state"] {
 
 function deploymentState(value: unknown): DeliveryEvidenceObservation["state"] {
   if (value === "success") return "success";
-  if (value === "inactive") return "cancelled";
   if (value === "failure" || value === "error") return "failure";
   return "pending";
 }
@@ -261,7 +260,9 @@ function workflowObservation(
   };
 }
 
-function deploymentObservation(delivery: GitHubDelivery): GitHubObservation {
+function deploymentObservation(
+  delivery: GitHubDelivery,
+): GitHubObservation | null {
   const deployment = record(delivery.payload.deployment);
   const status = record(delivery.payload.deployment_status);
   id(status.id);
@@ -276,6 +277,11 @@ function deploymentObservation(delivery: GitHubDelivery): GitHubObservation {
     "waiting",
   ];
   if (!states.includes(text(status.state))) throw new InvalidGitHubDelivery();
+  // GitHub marks a deployment inactive when a newer one to the same environment
+  // succeeds. On main's linear history the newer deployment contains this
+  // commit, so it is still delivered; treating inactive as evidence would undo
+  // completion whenever any environment redeploys. (hq maps it to cancelled.)
+  if (status.state === "inactive") return null;
   return {
     pullRequest: null,
     providerSequence: id(status.id),

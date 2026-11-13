@@ -81,3 +81,22 @@ ten seconds, may repeat deliveries, and does not guarantee order.
   merge.
 - See `services/work-graph-observer/README.md`.
 
+## Implementation notes (2026-11-13)
+
+- **Covered deployments.** Completion evaluation wants a successful deployment at each
+  PR's exact merge commit, but superseded queued runs, failed `main` checks and
+  infrastructure applied together leave commits without one, and their tickets could
+  never complete. After each successful deployment, the CD job, `ci.yml`'s `record-main`
+  and `record-deployment.sh` run `mise run work-graph:record-covered-deployments`. It
+  walks `main`'s first-parent history back to the previous successful deployment to the
+  environment and records a deployment for each commit whose delivery targets (resolved
+  with the evaluator's own resolver, across all projects) list that environment. The
+  evaluator is unchanged from hq. `--since <sha>` repairs gaps from before a mechanism
+  existed.
+- **Inactive deployments are ignored.** GitHub marks an earlier deployment `inactive`
+  when a newer one to the same environment succeeds. hq records that as `cancelled`
+  evidence, which undoes completion whenever an environment redeploys, so a ticket whose
+  PR needs several environments could get stuck. On `main`'s linear history the newer
+  deployment contains the older commit, so the observer stores `inactive` deliveries but
+  turns none into evidence.
+

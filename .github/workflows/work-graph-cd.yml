@@ -40,6 +40,7 @@ jobs:
     timeout-minutes: 20
     permissions:
       contents: read
+      deployments: write
     environment:
       name: production-work-graph
       url: https://work-graph.clemetson.me
@@ -47,6 +48,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history for recording the earlier commits this run delivers.
+          fetch-depth: 0
 
       - name: Install tools pinned in mise.toml
         uses: $/.github/actions/setup-mise
@@ -78,3 +81,10 @@ jobs:
         run: mise run work-graph:publish-delivery-targets
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      # Superseded queued runs never deploy their own commit; this run delivered
+      # them, so record that and let their tickets complete.
+      - name: Record earlier commits this run delivered
+        run: mise run work-graph:record-covered-deployments production-work-graph
+        env:
+          GH_TOKEN: ${{ github.token }}

@@ -76,4 +76,6 @@ After a successful apply from a clean checkout of the current `origin/main`,
 `production-work-graph-infra` for that commit, using the operator's `gh` login. That
 deployment is the delivery evidence the Work Graph observer needs before a ticket that
 changed `infra/work-graph` can count as done. Applies from anywhere else skip the record
-and say why.
+and say why. It then records deployments for the earlier `main` commits that changed
+`infra/work-graph` since the previous recorded apply, because this apply delivered them
+too (`mise run work-graph:record-covered-deployments`).
