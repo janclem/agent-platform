@@ -12,6 +12,10 @@
 - Never commit secrets. Encrypted files via `sops` only; plaintext secrets are a hard stop.
 - `main` is protected: work on a branch, open a PR, squash-merge. Use the
   `complete-pr-review-loop` skill to take a PR from draft to settled.
+- Commits and PRs show only the repository owner as author: no `Co-authored-by` trailers and
+  no "Generated with" footers, including in squash-merge messages.
+- Stage files by path, never `git add -A` or `git add .`: checks and tools rewrite tracked files
+  such as lockfiles, and those changes must not ride along.
 - Record architecturally significant choices with the `adr-writing` skill.
 - Find, claim and finish tickets in the shared Work Graph with the `work-graph` skill.
   Link each PR to its ticket as `implementation`, and release only with merge and
