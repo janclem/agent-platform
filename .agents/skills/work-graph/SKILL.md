@@ -62,21 +62,52 @@ report the candidates and risks instead of claiming one.
    highest-priority ready item that has never been claimed. Use repeatable
    `--exclude-project` or `--exclude-initiative` to avoid scopes. Specify the
    ticket ID to continue work after resolved attention or to recover a stale lease.
-3. As soon as the pull request exists, link it:
+3. Before opening the pull request, and at claim time if the change's paths
+   are already known, check the delivery targets (next section).
+4. As soon as the pull request exists, link it:
    `work-graph pr attach <ticket> <pr-url> --role implementation`. The GitHub
    observer attaches CI and deployment evidence only through this explicit link,
    never by branch name, title, or timing.
-4. Record durable findings or a handoff with
+5. Record durable findings or a handoff with
    `work-graph note <ticket> --content "..."`. The CLI finds the active lease
    and fencing epoch. Run `work-graph touch <ticket>` before a lease expires.
-5. After merging, finish the ticket as described in the next section before
+6. After merging, finish the ticket as described in the next section before
    ending the turn.
+
+## Check delivery targets
+
+The observer matches a merged pull request's changed paths only against
+delivery targets in the ticket's scheduling project. A path with no match there
+fails closed with `delivery_paths_unmapped` and a blocking attention request.
+Check before merging:
+
+1. Read the project: `work-graph show <ticket>` prints `schedulingProjectId`.
+2. List the changed paths: `git diff --name-only origin/main...HEAD`, or
+   `gh pr view <pr> --json files --jq '.files[].path'` once the PR exists.
+3. In `.work-graph/delivery-targets.yaml`, keep the targets whose `project` is
+   `project:<schedulingProjectId>`. Every changed path must equal or sit under a
+   `source_path_bindings` `path` of one of them.
+4. If the paths map only to another project's targets, move the ticket before
+   merging: `work-graph scope assign <ticket> --project-id <project>`. If they
+   span projects or the right project is unclear, raise an attention request
+   instead of guessing.
+
+If `delivery_paths_unmapped` appears anyway, move the ticket with `scope
+assign`, resolve its attention request (`work-graph attention list --blocking
+true`, then `work-graph attention resolve <id> --resolution "..."`), reclaim
+the ticket, and finish it as below, releasing it with evidence.
 
 ## Finish after merge
 
 Never end a turn holding a lease on finished work. A blocking attention request
 is the only sanctioned way to stop with the work unfinished. Decide each step
-from command output, not from judgement:
+from command output, not from judgement.
+
+Every wait blocks the turn in the foreground: `gh run watch <id>
+--exit-status`, or a polling loop inside one shell command with a timeout long
+enough to cover it. Never end a turn on a background task, a scheduled wakeup
+or a promise to resume: nothing is guaranteed to wake you, and the lease
+expires unused.
 
 1. Keep the lease alive: `work-graph touch <ticket>` before every wait, and
    between waits if one may outlast the lease (`--lease-duration-seconds`
