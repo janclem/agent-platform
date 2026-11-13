@@ -197,6 +197,11 @@ resource "cloudflare_workers_script" "github_observer" {
   module             = true
   compatibility_date = "2026-09-15"
 
+  hyperdrive_config_binding {
+    binding = "HYPERDRIVE"
+    id      = data.external.resource_metadata.result.hyperdrive_id
+  }
+
   queue_binding {
     binding = "DELIVERIES"
     queue   = cloudflare_queue.github_deliveries.name
