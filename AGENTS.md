@@ -28,6 +28,10 @@ The GitHub observer (`services/work-graph-observer`, ADR 19) is the Work Graph's
 - Never run `terraform apply` yourself. Run `terraform plan`, report the summary, and stop.
 - Any plan that destroys or replaces a resource must be called out explicitly.
 - `main` is protected: work on a branch, open a PR with `gh pr create`, squash-merge.
+- Commits and PRs show only the owner (`janclem`) as author: no `Co-authored-by` trailers and no
+  "Generated with" footers, including in squash-merge messages.
+- Stage files by path, never `git add -A` or `git add .`: checks and tools rewrite tracked files
+  such as lockfiles, and those changes must not ride along.
 - Find, claim and finish tickets in the Work Graph with the `work-graph` skill; link each
   PR to its ticket as `implementation`.
 - Edit a skill in `.agents/skills/`. Add a `.claude/skills/` pointer for every new skill;
