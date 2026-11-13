@@ -1,0 +1,9 @@
+# Global tools for the agent user on agent hosts (ADR 25), installed as that
+# user's ~/.config/mise/config.toml. Renovate bumps them like any mise file.
+# A T3 Code client refuses a server of another protocol version, so move the
+# owner's T3 Code client to the same `t3` version when this pin changes.
+[tools]
+node = "26.13.0"
+"npm:t3" = "0.1.7"
+"npm:@anthropic-ai/claude-code" = "2.1.311"
+"npm:@openai/codex" = "0.169.0"
