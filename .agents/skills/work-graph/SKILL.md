@@ -69,10 +69,45 @@ report the candidates and risks instead of claiming one.
 4. Record durable findings or a handoff with
    `work-graph note <ticket> --content "..."`. The CLI finds the active lease
    and fencing epoch. Run `work-graph touch <ticket>` before a lease expires.
-5. Release repository-backed work only after merge and production deployment:
-   `work-graph release <ticket> --merge-evidence <url> --deployment-evidence <url>`.
-   `work-graph show <ticket>` reports the observed delivery evidence and the
-   latest completion-candidate evaluation; check it agrees before releasing.
+5. After merging, finish the ticket as described in the next section before
+   ending the turn.
+
+## Finish after merge
+
+Never end a turn holding a lease on finished work. A blocking attention request
+is the only sanctioned way to stop with the work unfinished. Decide each step
+from command output, not from judgement:
+
+1. Keep the lease alive: `work-graph touch <ticket>` before every wait, and
+   between waits if one may outlast the lease (`--lease-duration-seconds`
+   lengthens it, default 900).
+2. Find what must pass. Get the merge commit with
+   `gh pr view <pr> --json mergeCommit,files`. The changed paths select targets
+   in `.work-graph/delivery-targets.yaml`; each names `required_ci_names` and
+   `production_environments`. Without that file, use the delivery contract.
+3. Wait for each required run at the merge commit:
+   `gh run list --commit <sha> --json databaseId,name,status,conclusion`, then
+   `gh run watch <id> --exit-status`. Confirm each environment deployed it:
+   `gh api "repos/<owner>/<repo>/deployments?sha=<sha>&environment=<env>"`,
+   then `gh api <statuses_url> --jq '.[0] | .state, .url'` must print `success`
+   and the status URL used as deployment evidence.
+4. Check release state with `work-graph show <ticket>`: `lifecycle` and
+   `completionCandidate` show whether the completion policy released it. If it
+   is still open, release it yourself with the PR URL and the successful
+   deployment status URL:
+   `work-graph release <ticket> --merge-evidence <pr-url> --deployment-evidence <status-url>`.
+5. Confirm with `work-graph metadata releases <ticket>`, which lists the release
+   event, its actor and time. Only then end the turn.
+
+If a required run or deployment fails, read it with `gh run view <id>
+--log-failed` and fix forward: a new PR linked to the same ticket as
+`implementation`, then repeat these steps for its merge. If fixing forward needs
+authority, access or a decision you lack, raise `work-graph attention request
+<ticket> --kind <kind> --question "..."` naming the single decision, and stop.
+
+The observer's lease-expiry sweep releases a completion candidate whose lease
+has lapsed. It is a safety net for agents that crash or lose their session, not
+the release path.
 
 What counts as deployed, and which CI and environments must pass, comes from the
 repository's `.work-graph/delivery-targets.yaml` and its delivery contract.
