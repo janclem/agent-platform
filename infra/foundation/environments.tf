@@ -38,3 +38,41 @@ resource "github_repository_environment_deployment_policy" "work_graph_backup_ma
   environment    = github_repository_environment.work_graph_backup.environment
   branch_pattern = "main"
 }
+
+# Records that main passed its checks (.github/workflows/ci.yml): the delivery
+# signal for platform changes, per the delivery contract's "merged main run of
+# platform / checks passed". Holds no secrets.
+resource "github_repository_environment" "agent_platform_production" {
+  repository  = module.repository["agent-platform"].name
+  environment = "production-agent-platform"
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}
+
+resource "github_repository_environment_deployment_policy" "agent_platform_production_main" {
+  repository     = github_repository_environment.agent_platform_production.repository
+  environment    = github_repository_environment.agent_platform_production.environment
+  branch_pattern = "main"
+}
+
+# Records a successful `mise run work-graph-infra:apply` from main: the delivery
+# signal for infra/work-graph changes. Deployments are created through the API
+# by the apply task, not by a workflow. Holds no secrets.
+resource "github_repository_environment" "work_graph_infra_production" {
+  repository  = module.repository["agent-platform"].name
+  environment = "production-work-graph-infra"
+
+  deployment_branch_policy {
+    protected_branches     = false
+    custom_branch_policies = true
+  }
+}
+
+resource "github_repository_environment_deployment_policy" "work_graph_infra_production_main" {
+  repository     = github_repository_environment.work_graph_infra_production.repository
+  environment    = github_repository_environment.work_graph_infra_production.environment
+  branch_pattern = "main"
+}
