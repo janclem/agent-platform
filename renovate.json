@@ -5,5 +5,15 @@
   ],
   "nix": {
     "enabled": true
-  }
+  },
+  "packageRules": [
+    {
+      "description": "Review agent-host tools by hand - no CI job runs them, and a T3 Code bump needs the owner's client updated with the host",
+      "matchFileNames": [
+        "homelab/agent-host/mise.toml"
+      ],
+      "groupName": "agent host tools",
+      "automerge": false
+    }
+  ]
 }

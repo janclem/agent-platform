@@ -18,30 +18,42 @@ ssh agent@<host> 'id; systemctl --user is-active docker; docker info --format "{
 
 `id` lists no `wheel`, Docker is `active`, and the security options include `rootless`.
 
-## 2. Install tools for the agent user
+## 2. Install the pinned tools
 
-As `agent` on the host, install mise at the version CI pins:
+As `agent` on the host, install mise at the version CI pins, make its shims visible to login
+shells (T3 Code finds provider CLIs there), and install the agent-host tools pinned in
+`homelab/agent-host/mise.toml`:
 
 ```bash
-version=$(curl -fsSL https://raw.githubusercontent.com/janclem/agent-platform/main/.github/actions/setup-mise/mise-version.txt)
-curl -fsSL https://mise.run | MISE_VERSION="v${version}" sh
+raw=https://raw.githubusercontent.com/janclem/agent-platform/main
+curl -fsSL https://mise.run | MISE_VERSION="v$(curl -fsSL "$raw/.github/actions/setup-mise/mise-version.txt")" sh
+echo 'export PATH="$HOME/.local/share/mise/shims:$HOME/.local/bin:$PATH"' >> ~/.profile
 echo 'eval "$(~/.local/bin/mise activate bash)"' >> ~/.bashrc
+mkdir -p ~/.config/mise
+curl -fsSL "$raw/homelab/agent-host/mise.toml" -o ~/.config/mise/config.toml
+~/.local/bin/mise install
 ```
 
-## 3. Install T3 Code
-
-Use the exact version your T3 Code client shows in **Settings → About**, because a client
-refuses a newer or older server:
+Check from your workstation that a non-interactive login shell sees them:
 
 ```bash
-curl -fsSL https://t3.codes/install.sh | T3CODE_VERSION=<version> sh
-cat > ~/.t3/service.env <<'EOF'
+ssh agent@<host> 'sh -lc "t3 --version; claude --version; codex --version"'
+```
+
+## 3. Start T3 Code
+
+Your T3 Code client must run the same version as the `t3` pin, or it refuses the server. As
+`agent`:
+
+```bash
+mkdir -p ~/.t3
+cat > ~/.t3/service.env <<EOF
 T3CODE_HOST=127.0.0.1
-DOCKER_HOST=unix:///run/user/<agent uid>/docker.sock
+DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
 EOF
 chmod 600 ~/.t3/service.env
-~/.local/bin/t3 service install
-~/.local/bin/t3 service status
+t3 service install
+t3 service status
 ```
 
 `t3 service status` reports the service running, enabled and lingering.
@@ -50,15 +62,17 @@ chmod 600 ~/.t3/service.env
 
 As `agent` on the host:
 
-- **GitHub:** create a fine-grained token on the owner's account, limited to the owner's
-  repositories, with read and write access to Contents, Pull requests and Workflows, read access
-  to Metadata, and an expiry. Then run `gh auth login --with-token` and paste it at the prompt,
-  and `gh auth setup-git`. Set `git config --global user.name` and `user.email` to the owner's.
+- **GitHub:** create a fine-grained token on the owner's account with an expiry, limited to the
+  repositories agents work in (`janclem/agent-platform`, `janclem/platform-smoke-test`), with
+  read and write access to Contents, Pull requests and Workflows, and read access to Actions,
+  Checks, Commit statuses and Metadata. Run `gh auth login --with-token` and paste it at the
+  prompt, then `gh auth setup-git`, and set `git config --global user.name` and `user.email`
+  to the owner's. `git push --dry-run` from a clone checks it.
 - **Work Graph:** create a read-only Doppler service token for `work-graph/prd_work_graph_agents`,
   add `DOPPLER_TOKEN=<token>` to `~/.t3/service.env`, and run `t3 service restart`.
-- **Claude Code:** `claude auth login` (install it first from **Settings → Providers** in T3 Code,
-  or with its installer).
-- **Codex:** connect it in **Settings → Providers** with the host's environment selected.
+- **Claude Code:** `claude auth login`.
+- **Codex:** `codex login`, or connect it in **Settings → Providers** with the host's
+  environment selected.
 
 ## 5. Pair a client
 
@@ -70,10 +84,21 @@ Open the printed link on the client, or paste it into **Add environment**. Treat
 password. The client reaches the host at `https://<host>.<tailnet>.ts.net/`, from the tailnet
 only.
 
-## Update T3 Code
+## Update the pinned tools
 
-Update the client, then use **Update server** when the client reports the host's version is
-older. A host that cannot update remotely: `t3 update <version> --yes` as `agent`.
+Renovate proposes bumps to `homelab/agent-host/mise.toml`; review and merge them by hand. Then,
+as `agent`, with no T3 work running:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/janclem/agent-platform/main/homelab/agent-host/mise.toml \
+  -o ~/.config/mise/config.toml
+mise install
+t3 service install
+t3 service restart
+```
+
+For a `t3` bump, update your T3 Code client to the same version in the same sitting. Do not use
+the client's **Update server** button; it would move the host off the pin.
 
 ## Rotate or revoke
 

@@ -29,15 +29,19 @@ that user could change or rebuild the host.
   - rootless Docker, so the Docker socket does not grant root;
   - `nix-ld`, so prebuilt Linux binaries such as T3 Code and Claude Code run;
   - permission for that user to run `tailscale serve`.
-- **T3 Code.** It is installed with T3 Code's own installer as that user's background service,
-  at the version the owner's client runs, and updated from the client. Pinning it through
-  nixpkgs would refuse every connection whenever the client updates first, and nixpkgs lags
-  upstream. This departs from ADR 3: the running version is recorded on the host, not in Git.
+- **Pinned agent tools.** `homelab/agent-host/mise.toml` pins T3 Code, Claude Code and Codex
+  (from npm) and Node, and is the agent user's global mise config. The `t3` launcher downloads
+  and checksum-verifies the T3 Code runtime for its own version, so the pin fixes the server.
+  This follows hq, which pins the same tools in its T3 Code image. Renovate proposes bumps, which
+  are reviewed by hand, never auto-merged: no CI job runs these tools, and the owner's client
+  must move to the same T3 Code version as the host. nixpkgs is not used for them because its
+  T3 Code release lags upstream.
 - **Access.** The server listens only on the host, and Tailscale Serve publishes it over HTTPS
   to the tailnet. There is no T3 Connect relay, no LAN listener and no open port.
 - **Credentials,** all set on the host and none in Git or the Nix store:
-  - GitHub as the owner's account, through a fine-grained token limited to the owner's
-    repositories and to contents, pull requests and workflows, with an expiry;
+  - GitHub as the owner's account, through a fine-grained token with an expiry, limited to the
+    repositories agents work in and to contents, pull requests and workflows (write) and
+    checks, statuses and actions (read), as hq does;
   - a read-only Doppler service token for `work-graph/prd_work_graph_agents`, so the
     `work-graph` CLI works unattended;
   - Claude Code and Codex signed in on the host by the owner.
@@ -51,8 +55,10 @@ that user could change or rebuild the host.
   host's CPU and memory.
 - Agent commits and pull requests appear as the owner's. The Work Graph lease, not the GitHub
   author, records which agent did the work.
-- Updating T3 Code is an owner action from the client; a mismatch shows as a refused
-  connection, not a silent failure.
+- Updating T3 Code is a reviewed pull request, then the owner updates the client and the host
+  together. Until both move, the client refuses the connection, which is visible rather than
+  silent. The client's **Update server** button is not used, since it would move the host off
+  the pin.
 - Changes that need root credentials still run from the owner's device; agents on the host
   stop and raise a Work Graph attention request for them.
 - Tokens on the host are readable by every agent there. Each is scoped to what agents need and
