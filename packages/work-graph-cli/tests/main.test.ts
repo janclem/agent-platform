@@ -1990,7 +1990,8 @@ describe("Given CLI and HTTP failures", () => {
     expect(JSON.parse(test.stderr[0] ?? "null")).toEqual({
       error: {
         code: "CLI_USAGE",
-        message: "✖ Invalid input: expected number, received string → at epoch",
+        message:
+          "error: option '--epoch <integer>' argument 'zero' is invalid. Invalid input: expected number, received string",
       },
     });
   });
@@ -2055,7 +2056,7 @@ describe("Given CLI and HTTP failures", () => {
         ]),
       ).toBe(EXIT_CODES.usage);
       expect(test.fetch).not.toHaveBeenCalled();
-      expect(test.stderr.join("")).toContain("canonicalUrl");
+      expect(test.stderr.join("")).toContain("--canonical-url");
     },
   );
 
