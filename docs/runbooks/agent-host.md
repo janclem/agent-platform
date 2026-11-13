@@ -40,6 +40,13 @@ Check from your workstation that a non-interactive login shell sees them:
 ssh agent@<host> 'sh -lc "t3 --version; claude --version; codex --version"'
 ```
 
+Clone the repository, install its pinned tools and the `work-graph` CLI:
+
+```bash
+git clone https://github.com/janclem/agent-platform.git ~/code/agent-platform
+cd ~/code/agent-platform && mise trust && mise install && mise run work-graph-cli:install
+```
+
 ## 3. Start T3 Code
 
 Your T3 Code client must run the same version as the `t3` pin, or it refuses the server. As
@@ -50,13 +57,15 @@ mkdir -p ~/.t3
 cat > ~/.t3/service.env <<EOF
 T3CODE_HOST=127.0.0.1
 DOCKER_HOST=unix:///run/user/$(id -u)/docker.sock
+WORK_GRAPH_DOPPLER_BIN=$HOME/.local/share/mise/shims/doppler
 EOF
 chmod 600 ~/.t3/service.env
 t3 service install
 t3 service status
 ```
 
-`t3 service status` reports the service running, enabled and lingering.
+`systemctl --user is-active t3code` reports `active`. The service's boot log prints a one-time
+pairing QR code; treat the log as a secret.
 
 ## 4. Sign in
 
@@ -69,8 +78,16 @@ As `agent` on the host:
   covers this repository's check runs.) Run `gh auth login --with-token` and paste it at the
   prompt, then `gh auth setup-git`, and set `git config --global user.name` and `user.email`
   to the owner's. `git push --dry-run` from a clone checks it.
-- **Work Graph:** create a read-only Doppler service token for `work-graph/prd_work_graph_agents`,
-  add `DOPPLER_TOKEN=<token>` to `~/.t3/service.env`, and run `t3 service restart`.
+- **Work Graph:** from a workstation signed in to Doppler, create a read-only service token for
+  `work-graph/prd_work_graph_agents` and write it straight into the service environment:
+
+  ```bash
+  doppler configs tokens create --name agent-host-<host> --project work-graph \
+    --config prd_work_graph_agents --access read --max-age 8760h --plain |
+    ssh agent@<host> 'umask 077; read -r t; sed -i "/^DOPPLER_TOKEN=/d" ~/.t3/service.env;
+      printf "DOPPLER_TOKEN=%s\n" "$t" >> ~/.t3/service.env'
+  ssh agent@<host> 'set -a; . ~/.t3/service.env; set +a; sh -lc "work-graph ready"; systemctl --user restart t3code'
+  ```
 - **Claude Code:** `claude auth login`.
 - **Codex:** `codex login`, or connect it in **Settings → Providers** with the host's
   environment selected.
