@@ -41,7 +41,7 @@ that user could change or rebuild the host.
 - **Credentials,** all set on the host and none in Git or the Nix store:
   - GitHub as the owner's account, through a fine-grained token with an expiry, limited to the
     repositories agents work in and to contents, pull requests and workflows (write) and
-    checks, statuses and actions (read), as hq does;
+    actions and commit statuses (read), as hq does;
   - a read-only Doppler service token for `work-graph/prd_work_graph_agents`, so the
     `work-graph` CLI works unattended;
   - Claude Code and Codex signed in on the host by the owner.
