@@ -65,7 +65,8 @@ As `agent` on the host:
 - **GitHub:** create a fine-grained token on the owner's account with an expiry, limited to the
   repositories agents work in (`janclem/agent-platform`, `janclem/platform-smoke-test`), with
   read and write access to Contents, Pull requests and Workflows, and read access to Actions,
-  Checks, Commit statuses and Metadata. Run `gh auth login --with-token` and paste it at the
+  Commit statuses and Metadata. (Fine-grained tokens have no Checks permission; Actions read
+  covers this repository's check runs.) Run `gh auth login --with-token` and paste it at the
   prompt, then `gh auth setup-git`, and set `git config --global user.name` and `user.email`
   to the owner's. `git push --dry-run` from a clone checks it.
 - **Work Graph:** create a read-only Doppler service token for `work-graph/prd_work_graph_agents`,
