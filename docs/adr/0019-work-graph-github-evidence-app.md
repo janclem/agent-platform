@@ -70,8 +70,14 @@ ten seconds, may repeat deliveries, and does not guarantee order.
   access. It still has no write permission.
 - **Delivery targets** live in `.work-graph/delivery-targets.yaml` in each observed
   repository, in the `catalog.records` shape of hq's platform catalog. Every target must
-  name a GitHub deployment environment, so only paths delivered through one (today the
-  Work Graph API, observer and CLI, via `production-work-graph`) are listed. Platform,
-  Terraform and backup changes need a deployment signal before they can be added.
+  name a GitHub deployment environment, so every delivery path records one:
+  `production-work-graph` from Work Graph CD, `production-work-graph-infra` from
+  `mise run work-graph-infra:apply` on `main`, and `production-agent-platform` from
+  `ci.yml` once `main` passes its checks.
+- **Catalog publishing.** hq stores the catalog only during the six-hourly
+  reconciliation, so evaluations after a catalog change, or for a repository's first
+  linked PR, wait up to six hours. Here Work Graph CD also publishes it on every run,
+  keyed by the file's git blob SHA (the ID reconciliation uses), so changes apply on
+  merge.
 - See `services/work-graph-observer/README.md`.
 
