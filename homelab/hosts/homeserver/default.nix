@@ -7,6 +7,7 @@ let
 in
 {
   imports = [
+    ../../modules/agent-host.nix
     ../../modules/reboot-to.nix
     ./disk-config.nix
     ./hardware-configuration.nix
@@ -74,6 +75,11 @@ in
       SystemMaxUse=1G
       MaxRetentionSec=14day
     '';
+  };
+
+  platform.agentHost = {
+    enable = true;
+    authorizedKeys = operatorKeys;
   };
 
   zramSwap.enable = true;

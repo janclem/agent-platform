@@ -46,7 +46,8 @@ get copies from this repo's Copier template and pick up changes with `copier upd
 ## Self-hosted servers
 
 `homelab/` declares NixOS hosts as a flake. Adding, installing, and rebuilding a host
-is covered in [docs/runbooks/nixos-hosts.md](docs/runbooks/nixos-hosts.md).
+is covered in [docs/runbooks/nixos-hosts.md](docs/runbooks/nixos-hosts.md). Hosts that
+run coding agents are set up with [docs/runbooks/agent-host.md](docs/runbooks/agent-host.md).
 
 ## Decisions
 
