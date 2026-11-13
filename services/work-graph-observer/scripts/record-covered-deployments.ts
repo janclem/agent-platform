@@ -32,13 +32,15 @@ const repository = (process.env.GITHUB_REPOSITORY ?? "janclem/agent-platform").t
 const head = git("rev-parse", "HEAD");
 const since = values.since === undefined ? undefined : git("rev-parse", `${values.since}^{commit}`);
 
+// Any success counts: GitHub marks a deployment inactive once a newer one
+// succeeds, so the latest status of an earlier deployment is usually inactive.
 const hasSuccessfulDeployment = (sha: string): boolean =>
   gh<{ id: number }[]>(
     `repos/${repository}/deployments?environment=${encodeURIComponent(environment)}&sha=${sha}&per_page=100`,
-  ).some(
-    ({ id }) =>
-      gh<{ state: string }[]>(`repos/${repository}/deployments/${id}/statuses?per_page=1`)[0]
-        ?.state === "success",
+  ).some(({ id }) =>
+    gh<{ state: string }[]>(`repos/${repository}/deployments/${id}/statuses?per_page=100`).some(
+      ({ state }) => state === "success",
+    ),
   );
 
 // Newest first, excluding HEAD itself.
