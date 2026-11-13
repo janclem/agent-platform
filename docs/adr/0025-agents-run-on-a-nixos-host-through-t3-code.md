@@ -4,7 +4,7 @@ status: Proposed
 date: 2026-11-13
 ---
 
-# 24. Run coding agents on a NixOS host through T3 Code, as an unprivileged user
+# 25. Run coding agents on a NixOS host through T3 Code, as an unprivileged user
 
 Coding agents run on an always-on NixOS host, in a T3 Code server that runs as a dedicated
 user without sudo. The owner drives them from T3 Code on other devices over the tailnet.

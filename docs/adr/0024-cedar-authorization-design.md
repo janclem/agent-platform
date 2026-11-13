@@ -4,7 +4,7 @@ status: Accepted
 date: 2026-11-11
 ---
 
-# 23. Authorize clients with a shared fail-closed Cedar package and trusted profile mapping
+# 24. Authorize clients with a shared fail-closed Cedar package and trusted profile mapping
 
 When ADR 17's trigger fires, Cedar comes in through a shared `packages/cedar-authorization`
 package that turns every policy error into a denial. Each service owns its schema and

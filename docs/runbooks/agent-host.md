@@ -1,6 +1,6 @@
 # Agent host
 
-Set up a NixOS host that runs coding agents through T3 Code (ADR 24). The host imports
+Set up a NixOS host that runs coding agents through T3 Code (ADR 25). The host imports
 `homelab/modules/agent-host.nix` with `platform.agentHost.enable = true`. Below, `<host>` is
 its tailnet name and `agent` is `platform.agentHost.user`.
 

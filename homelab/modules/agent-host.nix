@@ -1,4 +1,4 @@
-# A host that runs coding agents (ADR 24): a dedicated user with no sudo, whose
+# A host that runs coding agents (ADR 25): a dedicated user with no sudo, whose
 # systemd user services (T3 Code) start at boot, plus the tools agents need.
 # Agents run as that user, so they cannot change or rebuild the host; the
 # operator does. No credential enters the Nix store: each is set up on the host
