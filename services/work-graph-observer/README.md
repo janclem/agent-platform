@@ -25,6 +25,19 @@ depend on agents reporting it.
   deterministic synthetic delivery IDs, so missed deliveries are repaired and
   repeats are harmless.
 
+- **Lease-expiry sweep:** every five minutes it lists up to ten open tickets whose
+  current lease has expired but not ended, that have a completion policy and a
+  merged implementation PR, and that have not been evaluated since the lease
+  expired. Each one goes through the same `evaluateCompletionCandidateAndReleaseIfConfigured`
+  as a webhook, evaluated at the lease's expiry under an ID derived from the lease,
+  so a repeat replays the same evaluation. That call ends the expired lease and
+  releases the ticket as `completion-policy` only if it is a completion candidate
+  under an automatic-release policy; otherwise the ticket stays open and drops out
+  of the sweep until a new delivery evaluates it. The sweep adds no release rules.
+  Without it, a delivery that arrives while an agent still holds the lease records
+  the candidate but cannot release, and nothing re-evaluates once the lease lapses.
+  Logs carry the ticket ID and outcome.
+
 The observer has no route or binding to the Access-protected API.
 
 ## Correlation and delivery targets
@@ -48,7 +61,8 @@ batched commits still complete (`--dry-run` shows what it would record; `--since
 repairs older gaps). `inactive` deployment statuses, which GitHub sets when a newer
 deployment succeeds, are stored but never become evidence.
 
-Ingestion never releases, cancels, claims or renews work.
+Ingestion never releases, cancels, claims or renews work. Release happens only in
+completion-policy evaluation, after a delivery or through the lease-expiry sweep.
 
 ## GitHub App
 

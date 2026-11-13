@@ -11,9 +11,10 @@ preview_urls = false
 [observability]
 enabled = true
 
-# Reconcile missed deliveries every six hours.
+# Reconcile missed deliveries every six hours, and every five minutes re-evaluate
+# completed tickets whose blocking lease has expired (LEASE_EXPIRY_SWEEP_CRON).
 [triggers]
-crons = ["17 */6 * * *"]
+crons = ["17 */6 * * *", "*/5 * * * *"]
 
 [[queues.producers]]
 binding = "DELIVERIES"
