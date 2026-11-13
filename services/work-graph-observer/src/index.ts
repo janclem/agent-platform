@@ -1,6 +1,8 @@
 import {
+  type AutomaticReleaseOutcome,
   closeDb,
   createDb,
+  type ExpiredLeaseCompletionTarget,
   GitHubDeliveryConsumer,
   type GitHubReconciliationTarget,
   WorkGraphRepository,
@@ -26,6 +28,9 @@ const SUPPORTED_EVENTS = new Set([
 ]);
 const RECONCILIATION_INTERVAL_MS = 6 * 60 * 60 * 1_000;
 const RECONCILIATION_TARGET_LIMIT = 3;
+// Must match the second cron in wrangler.toml.
+export const LEASE_EXPIRY_SWEEP_CRON = "*/5 * * * *";
+const LEASE_EXPIRY_SWEEP_LIMIT = 10;
 
 export interface ObserverBindings {
   readonly HYPERDRIVE: Hyperdrive;
@@ -337,6 +342,77 @@ export function selectReconciliationTargets(
   );
 }
 
+export interface LeaseExpirySweepSummary {
+  readonly targets: number;
+  readonly outcomes: Readonly<
+    Partial<Record<AutomaticReleaseOutcome | "unconfigured" | "failed", number>>
+  >;
+}
+
+// One evaluation ID per expired lease, so a repeated sweep replays the same
+// evaluation instead of recording another.
+export async function leaseExpiryEvaluationId(
+  target: ExpiredLeaseCompletionTarget,
+): Promise<string> {
+  const bytes = new Uint8Array(
+    await crypto.subtle.digest(
+      "SHA-256",
+      encoder.encode(
+        `lease-expiry-completion-candidate\0${target.leaseId}\0${target.workItemId}`,
+      ),
+    ),
+  ).subarray(0, 16);
+  bytes[6] = ((bytes[6] ?? 0) & 0x0f) | 0x50;
+  bytes[8] = ((bytes[8] ?? 0) & 0x3f) | 0x80;
+  const hex = [...bytes]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+}
+
+// Re-evaluates items whose blocking lease has expired. Release decisions stay
+// in evaluateCompletionCandidateAndReleaseIfConfigured, which ends the expired
+// lease and releases only a completion candidate under an automatic policy.
+export async function runLeaseExpirySweep(
+  env: Pick<ObserverBindings, "HYPERDRIVE">,
+): Promise<LeaseExpirySweepSummary> {
+  const db = createDb(env.HYPERDRIVE.connectionString, { maxConnections: 1 });
+  try {
+    const repository = new WorkGraphRepository(db);
+    const targets = await repository.listExpiredLeaseCompletionTargets(
+      LEASE_EXPIRY_SWEEP_LIMIT,
+    );
+    const outcomes: Partial<
+      Record<AutomaticReleaseOutcome | "unconfigured" | "failed", number>
+    > = {};
+    for (const target of targets) {
+      let outcome: AutomaticReleaseOutcome | "unconfigured" | "failed";
+      try {
+        const result =
+          await repository.evaluateCompletionCandidateAndReleaseIfConfigured({ // NOSONAR: Serialize evaluations on the single database connection.
+            id: await leaseExpiryEvaluationId(target),
+            workItemId: target.workItemId,
+            evaluatedAt: target.leaseExpiresAt,
+          });
+        outcome = result?.automaticReleaseOutcome ?? "unconfigured";
+      } catch {
+        outcome = "failed";
+      }
+      console.log(
+        JSON.stringify({
+          operation: "lease-expiry-sweep",
+          workItemId: target.workItemId,
+          outcome,
+        }),
+      );
+      outcomes[outcome] = (outcomes[outcome] ?? 0) + 1;
+    }
+    return { targets: targets.length, outcomes };
+  } finally {
+    await closeDb(db);
+  }
+}
+
 export function createTargetScopedDeliveryConsumer(
   connectionString: string,
 ) {
@@ -377,7 +453,14 @@ export default {
       await closeDb(db);
     }
   },
-  async scheduled(_controller, env) {
+  async scheduled(controller, env) {
+    if (controller.cron === LEASE_EXPIRY_SWEEP_CRON) {
+      const summary = await runLeaseExpirySweep(env);
+      console.log(
+        JSON.stringify({ operation: "lease-expiry-sweep", ...summary }),
+      );
+      return;
+    }
     const summary = await runScheduledReconciliation(env);
     console.log(
       JSON.stringify({ operation: "github-reconciliation", ...summary }),

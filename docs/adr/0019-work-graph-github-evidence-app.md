@@ -100,3 +100,18 @@ ten seconds, may repeat deliveries, and does not guarantee order.
   deployment contains the older commit, so the observer stores `inactive` deliveries but
   turns none into evidence.
 
+
+## Implementation notes (2026-11-13, lease-expiry sweep)
+
+- **Re-evaluation after a lease expires.** Automatic release only runs when a delivery
+  for a linked PR arrives or a PR is linked. If the last delivery arrives while the
+  agent still holds its lease, the evaluation records a candidate but returns
+  `active_lease`, and nothing evaluates the ticket again once the lease lapses, so
+  it stays open. hq at `6c08a3b` has the same gap. Here the observer's cron also
+  runs a sweep every five minutes: a bounded page of open tickets with an expired,
+  unended lease, a completion policy, a merged implementation PR and no evaluation
+  since the lease expired goes through the unchanged
+  `evaluateCompletionCandidateAndReleaseIfConfigured`. The evaluation ID is derived
+  from the lease, so repeats are idempotent. The sweep adds no release rules and is
+  not ingestion: it appends no evidence and changes a lease only through the
+  existing automatic release, under its `completion-policy` actor.

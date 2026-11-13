@@ -1,4 +1,4 @@
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import {
   type DeliveryEvidenceObservation,
   type GitHubDelivery,
@@ -3459,6 +3459,248 @@ describe("delivery evidence persistence", () => {
     });
     expect(await repository.getWorkItem("guarded")).toMatchObject({
       lifecycle: "open",
+    });
+  });
+
+  describe("lease-expiry completion sweep", () => {
+    // Delivery-complete work with a merged PR, a policy and an active lease.
+    const leasedCompletion = async (
+      workItemId: string,
+      index: number,
+      options: {
+        readonly automaticRelease?: boolean;
+        readonly deployed?: boolean;
+        readonly state?: "open" | "merged";
+        readonly policy?: boolean;
+      } = {},
+    ) => {
+      const number = 20 + index;
+      const head = commitSha("123456789abc".charAt(index * 2));
+      const merge = commitSha("123456789abc".charAt(index * 2 + 1));
+      await repository.createWorkItem({ id: workItemId, title: workItemId });
+      await repository.refreshPullRequest({
+        repository: "example/work-graph",
+        number,
+        url: `https://github.com/example/work-graph/pull/${number}`,
+        headSha: head,
+        acceptedHeadSha: head,
+        mergeCommitSha: options.state === "open" ? null : merge,
+        state: options.state ?? "merged",
+        draft: false,
+        mergeability: "unknown",
+        reviewDecision: "approved",
+        checkSummary: "success",
+        observedAt: "2026-09-22T10:00:00.000Z",
+      });
+      await repository.putWorkItemPullRequest({
+        workItemId,
+        repository: "example/work-graph",
+        number,
+        role: "implementation",
+      });
+      if (options.policy !== false) {
+        await repository.putCompletionPolicyRevision({
+          policyId: `${workItemId}-policy`,
+          revision: 1,
+          requiredCiNames: ["verify"],
+          productionEnvironments: ["production"],
+          automaticRelease: options.automaticRelease ?? true,
+          createdAt: "2026-09-22T09:00:00.000Z",
+        });
+        await repository.assignCompletionPolicy({
+          workItemId,
+          policyId: `${workItemId}-policy`,
+          policyRevision: 1,
+          assignedAt: "2026-09-22T09:30:00.000Z",
+        });
+      }
+      const suffix = 70 + index * 3;
+      await storeObservation(suffix, {
+        externalId: `${workItemId}-pr`,
+        commitSha: merge,
+        kind: "pull_request",
+        name: null,
+        correlationKind: "pull_request_merge",
+        pullRequestNumber: number,
+      });
+      await storeObservation(suffix + 1, {
+        externalId: `${workItemId}-ci`,
+        commitSha: head,
+        pullRequestNumber: number,
+      });
+      if (options.deployed !== false) {
+        await storeObservation(suffix + 2, {
+          externalId: `${workItemId}-deployment`,
+          commitSha: merge,
+          kind: "deployment",
+          name: null,
+          environment: "production",
+          correlationKind: "pull_request_merge",
+          pullRequestNumber: number,
+        });
+      }
+      const claimed = await repository.claimWorkItem({
+        workItemId,
+        workerId: "worker-a",
+        leaseId: recordId(780 + index),
+        leaseDurationSeconds: 300,
+      });
+      if (!claimed) throw new Error(`Expected a lease on ${workItemId}.`);
+      return claimed;
+    };
+    const expire = (leaseId: string, minutesAgo = 1) =>
+      db
+        .update(schema.lease)
+        .set({
+          acquiredAt: sql`clock_timestamp() - interval '20 minutes'`,
+          expiresAt: sql`clock_timestamp() - make_interval(mins => ${minutesAgo})`,
+        })
+        .where(eq(schema.lease.id, leaseId));
+    // What the observer's sweep does for each target.
+    const sweep = async () => {
+      const targets = await repository.listExpiredLeaseCompletionTargets();
+      const outcomes: Record<string, string | undefined> = {};
+      for (const target of targets) {
+        const result =
+          await repository.evaluateCompletionCandidateAndReleaseIfConfigured({
+            id: target.leaseId,
+            workItemId: target.workItemId,
+            evaluatedAt: target.leaseExpiresAt,
+          });
+        outcomes[target.workItemId] = result?.automaticReleaseOutcome;
+      }
+      return outcomes;
+    };
+
+    it("releases a candidate blocked by a lease once the lease expires", async () => {
+      const claimed = await leasedCompletion("blocked", 0);
+      await expect(
+        repository.evaluateCompletionCandidateAndReleaseIfConfigured({
+          id: recordId(790),
+          workItemId: "blocked",
+          // The delivery arrived before the lease expiry set below.
+          evaluatedAt: new Date(Date.now() - 10 * 60_000).toISOString(),
+        }),
+      ).resolves.toMatchObject({
+        automaticReleaseOutcome: "active_lease",
+        evaluation: { candidate: true },
+      });
+      await expect(sweep()).resolves.toEqual({});
+
+      await expire(claimed.id);
+      await expect(sweep()).resolves.toEqual({ blocked: "released" });
+      expect(await repository.getWorkItem("blocked")).toMatchObject({
+        lifecycle: "released",
+      });
+      const [ended] = await db
+        .select()
+        .from(schema.lease)
+        .where(eq(schema.lease.id, claimed.id));
+      expect(ended).toMatchObject({ outcome: "expired" });
+      const releases = await repository.listEvents({
+        workItemId: "blocked",
+        type: "work_item.lifecycle_changed",
+        lifecycle: "released",
+      });
+      expect(releases).toHaveLength(1);
+      expect(releases[0]?.data).toMatchObject({
+        actor: "completion-policy",
+        completionCandidateEvaluationId: claimed.id,
+      });
+      await expect(sweep()).resolves.toEqual({});
+    });
+
+    it("never releases while the lease is active, even when listed", async () => {
+      const claimed = await leasedCompletion("racing", 1);
+      await expire(claimed.id);
+      const [target] = await repository.listExpiredLeaseCompletionTargets();
+      if (!target) throw new Error("Expected an expired-lease target.");
+      // The worker renews between the sweep's listing and its evaluation.
+      await db
+        .update(schema.lease)
+        .set({ expiresAt: sql`clock_timestamp() + interval '5 minutes'` })
+        .where(eq(schema.lease.id, claimed.id));
+      await expect(
+        repository.evaluateCompletionCandidateAndReleaseIfConfigured({
+          id: target.leaseId,
+          workItemId: target.workItemId,
+          evaluatedAt: target.leaseExpiresAt,
+        }),
+      ).resolves.toMatchObject({ automaticReleaseOutcome: "active_lease" });
+      expect(await repository.getWorkItem("racing")).toMatchObject({
+        lifecycle: "open",
+      });
+    });
+
+    it("evaluates once, without releasing, under a manual policy or missing evidence", async () => {
+      const manual = await leasedCompletion("manual", 2, {
+        automaticRelease: false,
+      });
+      const undeployed = await leasedCompletion("undeployed", 3, {
+        deployed: false,
+      });
+      await expire(manual.id);
+      await expire(undeployed.id);
+
+      await expect(sweep()).resolves.toEqual({
+        manual: "automatic_release_disabled",
+        undeployed: "completion_requirements_not_met",
+      });
+      for (const workItemId of ["manual", "undeployed"]) {
+        expect(await repository.getWorkItem(workItemId)).toMatchObject({
+          lifecycle: "open",
+        });
+      }
+      const leases = await db
+        .select()
+        .from(schema.lease)
+        .where(inArray(schema.lease.id, [manual.id, undeployed.id]));
+      expect(leases.map(({ endedAt }) => endedAt)).toEqual([null, null]);
+      await expect(sweep()).resolves.toEqual({});
+      // A repeated evaluation of the same expired lease replays its result.
+      const undeployedLease = leases.find(({ id }) => id === undeployed.id);
+      if (!undeployedLease) throw new Error("Expected the undeployed lease.");
+      await expect(
+        repository.evaluateCompletionCandidateAndReleaseIfConfigured({
+          id: undeployed.id,
+          workItemId: "undeployed",
+          evaluatedAt: undeployedLease.expiresAt.toISOString(),
+        }),
+      ).resolves.toMatchObject({
+        automaticReleaseOutcome: "completion_requirements_not_met",
+      });
+    });
+
+    it("selects only open items with an expired lease, a policy and a merged PR", async () => {
+      const unmerged = await leasedCompletion("unmerged", 0, { state: "open" });
+      const unconfigured = await leasedCompletion("unconfigured", 1, {
+        policy: false,
+      });
+      const cancelled = await leasedCompletion("cancelled", 2);
+      await leasedCompletion("active", 3);
+      const first = await leasedCompletion("first", 4);
+      const second = await leasedCompletion("second", 5);
+      for (const leased of [unmerged, unconfigured, cancelled, second]) {
+        await expire(leased.id);
+      }
+      await expire(first.id, 2);
+      await repository.cancelWorkItem("cancelled");
+
+      await expect(
+        repository.listExpiredLeaseCompletionTargets(),
+      ).resolves.toEqual([
+        expect.objectContaining({ workItemId: "first", leaseId: first.id }),
+        expect.objectContaining({ workItemId: "second", leaseId: second.id }),
+      ]);
+      await expect(
+        repository.listExpiredLeaseCompletionTargets(1),
+      ).resolves.toEqual([expect.objectContaining({ workItemId: "first" })]);
+      await expect(
+        repository.listExpiredLeaseCompletionTargets(0),
+      ).rejects.toMatchObject({ code: "invalid_scheduling_scope" });
+      await expect(
+        repository.listExpiredLeaseCompletionTargets(101),
+      ).rejects.toMatchObject({ code: "invalid_scheduling_scope" });
     });
   });
 });

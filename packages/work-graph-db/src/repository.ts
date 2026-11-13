@@ -371,6 +371,12 @@ export interface GitHubReconciliationTarget {
   readonly number: number;
 }
 
+export interface ExpiredLeaseCompletionTarget {
+  readonly workItemId: string;
+  readonly leaseId: string;
+  readonly leaseExpiresAt: string;
+}
+
 export interface ListKnowledgeScopesInput {
   readonly kind?: KnowledgeScope["kind"];
   readonly includeArchived?: boolean;
@@ -3871,6 +3877,71 @@ export class WorkGraphRepository {
       )
       .orderBy(workItemPullRequest.repository, workItemPullRequest.number)
       .limit(limit);
+  }
+
+  // Open items whose current lease has expired but not ended, with a
+  // completion policy and a merged implementation PR, and no evaluation since
+  // the lease expired. Evaluation is otherwise triggered only by deliveries and
+  // PR links, so one blocked by the lease would never be repeated.
+  async listExpiredLeaseCompletionTargets(
+    limit = 20,
+  ): Promise<readonly ExpiredLeaseCompletionTarget[]> {
+    if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100) {
+      throw new WorkGraphError(
+        "invalid_scheduling_scope",
+        "Expired-lease completion target limit must be between 1 and 100.",
+      );
+    }
+    const rows = await this.db
+      .select({
+        workItemId: workItem.id,
+        leaseId: lease.id,
+        leaseExpiresAt: lease.expiresAt,
+      })
+      .from(workItem)
+      .innerJoin(
+        lease,
+        and(eq(lease.workItemId, workItem.id), isNull(lease.endedAt)),
+      )
+      .innerJoin(
+        workItemCompletionPolicy,
+        eq(workItemCompletionPolicy.workItemId, workItem.id),
+      )
+      .leftJoin(
+        workItemCompletionCandidate,
+        eq(workItemCompletionCandidate.workItemId, workItem.id),
+      )
+      .where(
+        and(
+          eq(workItem.lifecycle, "open"),
+          lte(lease.expiresAt, sql`clock_timestamp()`),
+          or(
+            isNull(workItemCompletionCandidate.projectedAt),
+            // The sweep evaluates at the expiry in milliseconds, which then
+            // removes the item from this selection.
+            lt(
+              workItemCompletionCandidate.projectedAt,
+              sql`date_trunc('milliseconds', ${lease.expiresAt})`,
+            ),
+          ),
+          sql`exists (
+            select 1
+            from ${workItemPullRequest}
+            inner join ${pullRequest}
+              on ${pullRequest.repository} = ${workItemPullRequest.repository}
+              and ${pullRequest.number} = ${workItemPullRequest.number}
+            where ${workItemPullRequest.workItemId} = ${workItem.id}
+              and ${workItemPullRequest.role} = 'implementation'
+              and ${pullRequest.state} = 'merged'
+          )`,
+        ),
+      )
+      .orderBy(lease.expiresAt, workItem.id)
+      .limit(limit);
+    return rows.map((row) => ({
+      ...row,
+      leaseExpiresAt: row.leaseExpiresAt.toISOString(),
+    }));
   }
 
   private async listCurrentDeliveryEvidenceInTransaction(
