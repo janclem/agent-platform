@@ -29,4 +29,6 @@ after acceptance; a later record supersedes them. See the `adr-writing` skill.
 | [22](0022-work-graph-workers-free-until-cpu-limit.md) | Run the Work Graph API on Workers Free until requests exceed its CPU limit | Accepted |
 | [23](0023-doppler-for-machine-secrets.md) | Keep machine secrets in Doppler and human root credentials in 1Password | Accepted |
 | [24](0024-cedar-authorization-design.md) | Authorize Work Graph clients with a shared fail-closed Cedar package and trusted profile mapping | Accepted |
-| [25](0025-agents-run-on-a-nixos-host-through-t3-code.md) | Run coding agents on a NixOS host through T3 Code, as an unprivileged user | Proposed |
+| [25](0025-agents-run-on-a-nixos-host-through-t3-code.md) | Run coding agents on a NixOS host through T3 Code, as an unprivileged user | Proposed; access amended by [27](0027-coordinator-webhook-ingress-through-t3-connect.md) |
+| [26](0026-agent-coordinator-on-t3-code-renovate-repair-first.md) | Coordinate agents from a T3 Code controller thread woken by GitHub webhooks, starting with Renovate repair | Accepted |
+| [27](0027-coordinator-webhook-ingress-through-t3-connect.md) | Receive coordinator webhooks through T3 Connect, with an exit through the observer and a Durable Object | Accepted |
