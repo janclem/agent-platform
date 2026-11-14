@@ -4,7 +4,7 @@
 # owner's T3 Code client to the same `t3` version when this pin changes.
 [tools]
 node = "26.13.0"
-"npm:t3" = "0.1.7"
+"npm:t3" = "0.1.9"
 # Claude Code's npm package fetches its native binary in a postinstall step that
 # mise skips; the aqua backend installs that binary directly.
 "aqua:anthropics/claude-code" = "2.1.311"
