@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "policyId": "agent-coordinator:renovate-repair",
+  "revision": 1,
+  "decisionRecord": "docs/adr/0026-agent-coordinator-on-t3-code-renovate-repair-first.md",
+  "repository": "janclem/agent-platform",
+  "author": {
+    "login": "renovate[bot]",
+    "type": "Bot"
+  },
+  "trigger": {
+    "webhookEvent": "workflow_run",
+    "webhookAction": "completed",
+    "webhookConclusions": ["failure"],
+    "pullRequestState": "open",
+    "requiredCheckBuckets": ["fail"]
+  },
+  "excludedPathPrefixes": ["homelab/", "infra/"],
+  "concurrency": {
+    "maximumActiveWorkers": 1
+  },
+  "workItem": {
+    "idPrefix": "renovate-repair-",
+    "idTemplate": "renovate-repair-{repositoryName}-{pullRequestNumber}"
+  }
+}

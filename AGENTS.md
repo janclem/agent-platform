@@ -13,6 +13,7 @@ Worker in workerd, and runs the HTTP integration tests. After changing a route, 
 `openapi.json` and the CLI client and commit both. More areas (services/) will be added.
 Nightly encrypted Work Graph backups live in `backups/` (ADR 21); see `backups/README.md`.
 The GitHub observer (`services/work-graph-observer`, ADR 19) is the Work Graph's only public ingress; delivery targets for completion evidence are in `.work-graph/delivery-targets.yaml`.
+The agent coordinator's admission policy, controller instructions and worker brief live in `docs/coordinator/` (ADR 26); `mise run coordinator:policy-check` validates the policy.
 
 ## Tooling
 - All tools are pinned in `mise.toml`. Run `mise install` first; use tools via mise.
