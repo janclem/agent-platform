@@ -16,8 +16,12 @@ zizmor = "1.32.0"
 
 [tasks.ci]
 description = "Repo-specific checks run by the platform checks workflow"
-depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph:observer", "work-graph-infra:check", "work-graph:backup-check"]
+depends = ["ts:check", "work-graph:db", "work-graph:api", "work-graph:observer", "work-graph-infra:check", "work-graph:backup-check", "coordinator:policy-check"]
 run = "scripts/test-template.sh"
+
+[tasks."coordinator:policy-check"]
+description = "Validate the coordinator admission policy (ADR 26) and prove malformed policies fail"
+run = "scripts/check-coordinator-policy.sh --self-test docs/coordinator/renovate-repair/controller-policy.json"
 
 [tasks."ts:install"]
 description = "Install the TypeScript workspace from the lockfile"
