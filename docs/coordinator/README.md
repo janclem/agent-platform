@@ -14,14 +14,16 @@ no unattended authority beyond what a worker already has under the
 
 ## Workflows
 
-| Workflow | Policy | Controller | Worker brief |
-| --- | --- | --- | --- |
-| Repair failing Renovate PRs | [controller-policy.json](renovate-repair/controller-policy.json) | [controller.md](renovate-repair/controller.md) | [worker-brief.md](renovate-repair/worker-brief.md) |
+| Workflow | Policy | Controller | Worker brief | Webhook task |
+| --- | --- | --- | --- | --- |
+| Repair failing Renovate PRs | [controller-policy.json](renovate-repair/controller-policy.json) | [controller.md](renovate-repair/controller.md) | [worker-brief.md](renovate-repair/worker-brief.md) | [webhook-task.md](renovate-repair/webhook-task.md) |
 
 - **Policy**: what the controller may admit. It reads the file from `main` on every event.
 - **Controller instructions**: what the persistent controller thread does with each webhook
   prompt.
 - **Worker brief**: the prompt the controller fills in and hands to each worker thread.
+- **Webhook task**: the live T3 webhook task and GitHub webhook that prompt the controller,
+  and how to rotate, check, redeliver and pause them.
 
 ## Validating the policy
 
@@ -39,6 +41,12 @@ together.
 
 ## Not here
 
-The T3 webhook task, the GitHub webhook, T3 Connect and the controller thread itself are
-configured by the owner under separate tickets. These files hold no secrets and name no
-machines.
+The live pieces are configured outside git, and only their settings are recorded here:
+- the controller thread and the T3 webhook task live in T3 Code on the agent host;
+  [webhook-task.md](renovate-repair/webhook-task.md) records their configuration;
+- the GitHub webhook is set by hand in the repository's settings, not in Terraform, because
+  its secret would land in state (ADR 23); webhook-task.md says why and how to operate it;
+- T3 Connect is enabled on the agent host (ADR 27).
+
+The webhook URL carries the task's access token. It and the signing secret stay with the
+owner (the secret in 1Password). These files hold no secrets and name no machines.

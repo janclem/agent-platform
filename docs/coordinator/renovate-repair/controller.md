@@ -30,7 +30,8 @@ repository, author, trigger, exclusions, concurrency and item-ID template used b
 
 ### 2. Validate the routing values
 
-The webhook task passes only identity fields:
+The webhook task ([webhook-task.md](webhook-task.md)) passes only identity fields, after a
+one-line pointer to this file:
 
 ```text
 delivery_id={{headers.x-github-delivery}}
