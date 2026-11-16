@@ -1,6 +1,7 @@
 # Agent host
 
-Set up a NixOS host that runs coding agents through T3 Code (ADR 25). The host imports
+Set up a NixOS host that runs coding agents through T3 Code (ADR 25, with access amended
+by [ADR 27](../adr/0027-coordinator-webhook-ingress-through-t3-connect.md)). The host imports
 `homelab/modules/agent-host.nix` with `platform.agentHost.enable = true`. Below, `<host>` is
 its tailnet name and `agent` is `platform.agentHost.user`.
 
@@ -99,8 +100,60 @@ As `agent` on the host:
 ```
 
 Open the printed link on the client, or paste it into **Add environment**. Treat it as a
-password. The client reaches the host at `https://<host>.<tailnet>.ts.net/`, from the tailnet
-only.
+password. The client reaches the host at `https://<host>.<tailnet>.ts.net/`, from the tailnet.
+This stays the owner's route to the host; T3 Connect (step 6) is on only for webhooks.
+
+## 6. T3 Connect for coordinator webhooks
+
+T3 Connect is on for one reason: GitHub must reach the coordinator's T3 webhook task, and it
+cannot reach the tailnet ([ADR 27](../adr/0027-coordinator-webhook-ingress-through-t3-connect.md)).
+Connect makes the whole T3 server reachable from the internet behind T3's own sign-in, through
+T3's relay and a Cloudflare tunnel. The owner's clients keep using the tailnet route above.
+
+**Turn it on.** This is the owner's decision and sign-in. As `agent` on the host, with no T3
+work running (the restart stops running agent turns):
+
+```bash
+t3 up --connect --headless
+```
+
+Open the printed link on any device, check the code matches, and approve with the owner's T3
+account. Treat the link and code as passwords. Then, in **Settings → Sharing & access** for the
+host's environment, confirm **Hold webhooks while offline** is off.
+
+**Check it.** As `agent`:
+
+```bash
+t3 status --json    # connect.enabled is true and connect.revoked is false
+t3 connect status   # exposure enabled, tunnel connected
+```
+
+**Rules while it is on** (ADR 27):
+
+- **Hold webhooks while offline** stays off, so the relay never stores a request body or hook
+  token. GitHub redelivers what was missed while the host was down.
+- The owner's T3 account keeps strong second-factor authentication: whoever holds it can reach
+  the host's T3 server.
+- Webhook tasks check GitHub's signature and pass only identity fields (delivery ID, event,
+  repository, run ID, head SHA, PR number) to the prompt; the controller re-fetches state from
+  GitHub (ADR 26).
+
+**Network.** The tunnel (`cloudflared`, installed and managed by `t3`) connects out to
+Cloudflare on port 7844, TCP and UDP; nothing listens inbound. If the tunnel is down, for
+example because a Tailscale exit node, VPN or firewall blocks 7844, follow
+[T3 Connect troubleshooting](https://github.com/pingdotgg/t3code/blob/v0.1.9/docs/user/t3-connect-troubleshooting.md).
+The tailnet route keeps working while Connect is down.
+
+**Turn it off.** Also the owner's decision. Turning it off stops coordinator webhooks until
+ADR 27's exit plan moves them to the observer. As `agent`:
+
+- `t3 connect unlink` turns exposure off and keeps the T3 login for a later relink;
+- `t3 connect logout` turns it off and clears the login;
+- or choose **Deregister** for the environment on the account's **T3 Connect** page, which
+  revokes its cloud access even while the host is offline. Also run `t3 connect unlink` on the
+  host, or it may link itself again on its next start.
+
+Then check with `t3 connect status`.
 
 ## Update the pinned tools
 
@@ -123,5 +176,6 @@ the client's **Update server** button; it would move the host off the pin.
 - Paired clients: `t3 auth session list` and `t3 auth session revoke <id>`.
 - GitHub and Doppler tokens: replace them as in step 4, then revoke the old ones where they
   were created.
+- T3 Connect: see [step 6](#6-t3-connect-for-coordinator-webhooks).
 - To stop the agent host: `t3 service uninstall` as `agent`, then set
   `platform.agentHost.enable = false` and rebuild.
