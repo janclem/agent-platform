@@ -7,5 +7,5 @@ runs:
     - name: Validate Renovate config
       shell: bash
       env:
-        RENOVATE_IMAGE: renovate/renovate:44.225.1@sha256:eec896cbc3a745b5144c1547360e8197efcd0f949a688a8a63605ee4db8590d0
+        RENOVATE_IMAGE: renovate/renovate:44.225.2@sha256:c50ebdbb78fe9cab324b118f126921f87e9ca04f611fb5ae77e35792aaf7777a
       run: ${{ github.action_path }}/renovate-validate.sh
