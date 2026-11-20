@@ -21,4 +21,4 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: janclem/agent-platform/.github/workflows/scans.yml@b8a6abce7186d84450837851522fce4f9058414c # v1.3.0
+    uses: janclem/agent-platform/.github/workflows/scans.yml@31dbace4291f6480cecfe849ac8dd4f0bf871c92 # v1.3.1
