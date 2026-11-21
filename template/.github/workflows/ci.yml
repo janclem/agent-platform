@@ -17,4 +17,4 @@ jobs:
     name: platform
     permissions:
       contents: read
-    uses: janclem/agent-platform/.github/workflows/checks.yml@31dbace4291f6480cecfe849ac8dd4f0bf871c92 # v1.3.1
+    uses: janclem/agent-platform/.github/workflows/checks.yml@eb2d552059980881ed71ba1d71acc96af0b4d51d # v1.3.4
